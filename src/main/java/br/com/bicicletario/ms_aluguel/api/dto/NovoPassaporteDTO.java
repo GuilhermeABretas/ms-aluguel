@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
-// DTO para os dados do passaporte, usado dentro do NovoCiclistaDTO
+
 public class NovoPassaporteDTO {
 
     @NotBlank(message = "Número do passaporte é obrigatório")
@@ -18,7 +18,7 @@ public class NovoPassaporteDTO {
     @Size(min = 2, max = 2, message = "País deve ser um código de 2 dígitos (ISO 3166-1 alpha-2)")
     private String pais;
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public String getNumero() {
         return numero;

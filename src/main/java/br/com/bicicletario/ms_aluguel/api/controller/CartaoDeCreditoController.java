@@ -12,8 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/cartaoDeCredito") // Rota base correta
 public class CartaoDeCreditoController {
 
-    @Autowired
+
     private CiclistaService ciclistaService; // O CiclistaService ainda controla a lógica
+
+    public CartaoDeCreditoController(CiclistaService ciclistaService) {
+        this.ciclistaService = ciclistaService;
+    }
 
     /**
      * UC07 - Recupera dados de cartão de crédito de um ciclista

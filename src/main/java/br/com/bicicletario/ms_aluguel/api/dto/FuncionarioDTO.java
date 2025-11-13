@@ -2,12 +2,8 @@ package br.com.bicicletario.ms_aluguel.api.dto;
 
 import br.com.bicicletario.ms_aluguel.domain.model.Funcao;
 import br.com.bicicletario.ms_aluguel.domain.model.Funcionario;
-// import lombok.Getter; // Removido
-// import lombok.Setter; // Removido
 
-// DTO para Respostas (GET /funcionario, GET /funcionario/{id}, etc.)
-// @Getter // Removido
-// @Setter // Removido
+
 public class FuncionarioDTO {
 
     private Long matricula; // No Swagger e UC15 é 'matricula'
