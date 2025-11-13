@@ -44,7 +44,7 @@ test-and-analyze:
 # ------------------------------------
 deploy-to-heroku:
   stage: deploy
-  image: ruby:2.7 # Imagem do Ruby para o Heroku CLI (dpl)
+  image: ruby:3.2 # Imagem do Ruby para o Heroku CLI (dpl)
   dependencies:
     - build
   script:
