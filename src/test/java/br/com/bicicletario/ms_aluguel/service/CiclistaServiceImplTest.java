@@ -311,4 +311,60 @@ class CiclistaServiceImplTest {
         verify(cartaoRepository, times(1)).save(any(CartaoDeCredito.class));
         verify(emailService, times(1)).enviarEmail(any(), any(), any());
     }
+    // NOVO TESTE 1: Caminho feliz do Estrangeiro (Cobre o Bloco 1)
+    @Test
+    void testCadastrarCiclista_Sucesso_Estrangeiro() {
+        // --- Configuração Específica ---
+        NovoPassaporteDTO passaporteDTO = new NovoPassaporteDTO();
+        passaporteDTO.setNumero("G12345678");
+        passaporteDTO.setValidade(LocalDate.now().plusYears(5));
+        passaporteDTO.setPais("US");
+
+        novoCiclistaDTO.setNacionalidade(Nacionalidade.ESTRANGEIRO);
+        novoCiclistaDTO.setPassaporte(passaporteDTO);
+        novoCiclistaDTO.setCpf(null); // Estrangeiro não tem CPF
+
+        // --- Mocks ---
+        when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
+        when(pagamentoService.validarCartao(novoCartaoDTO)).thenReturn(true);
+        when(ciclistaRepository.save(any(Ciclista.class))).thenAnswer(invocation -> {
+            Ciclista ciclistaSalvo = invocation.getArgument(0);
+            ciclistaSalvo.setId(2L);
+            // Verifica se o passaporte FOI mapeado
+            assertNotNull(ciclistaSalvo.getPassaporte());
+            assertEquals("G12345678", ciclistaSalvo.getPassaporte().getNumero());
+            return ciclistaSalvo;
+        });
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // --- Execução ---
+        CiclistaDTO resultado = service.cadastrarCiclista(novoCiclistaDTO);
+
+        // --- Verificação ---
+        assertNotNull(resultado);
+        assertEquals(Nacionalidade.ESTRANGEIRO, novoCiclistaDTO.getNacionalidade());
+        verify(ciclistaRepository, times(1)).save(any(Ciclista.class));
+    }
+
+    // NOVO TESTE 2: Caminho triste do Estrangeiro (Cobre o Bloco 2)
+    @Test
+    void testCadastrarCiclista_Falha_EstrangeiroSemPassaporte() {
+        // --- Configuração Específica ---
+        novoCiclistaDTO.setNacionalidade(Nacionalidade.ESTRANGEIRO);
+        novoCiclistaDTO.setPassaporte(null); // <-- O erro (passaporte nulo)
+        novoCiclistaDTO.setCpf(null);
+
+        // --- Mocks ---
+        when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
+
+        // --- Execução e Verificação ---
+        ValidacaoException ex = assertThrows(
+                ValidacaoException.class,
+                () -> service.cadastrarCiclista(novoCiclistaDTO)
+        );
+
+        // Verifica se a exceção correta foi lançada
+        assertEquals("Dados do passaporte são obrigatórios para estrangeiros.", ex.getMessage());
+        verify(ciclistaRepository, never()).save(any(Ciclista.class));
+    }
 }
