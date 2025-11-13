@@ -1,0 +1,61 @@
+image: maven:3.8-openjdk-17-slim
+
+stages:
+  - build
+  - test-and-analyze
+  - deploy
+
+# ------------------------------------
+# 1. BUILD (Gera o .jar)
+# ------------------------------------
+build:
+  stage: build
+  script:
+    - echo "Iniciando build do projeto..."
+    - mvn clean install -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+  only:
+    - main
+    - merge_requests
+
+# ------------------------------------
+# 2. TEST AND ANALYZE (SonarCloud)
+# ------------------------------------
+test-and-analyze:
+  stage: test-and-analyze
+  # Garante que o build terminou
+  dependencies:
+    - build
+  script:
+    - echo "Iniciando testes e analise com SonarCloud..."
+    # Configura o token de analise do Sonar
+    - export SONAR_TOKEN=$SONAR_TOKEN
+    # Roda testes unitários, gera cobertura e envia para o SonarCloud
+    - mvn clean verify sonar:sonar
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+
+# ------------------------------------
+# 3. DEPLOY (Heroku)
+# ------------------------------------
+deploy-to-heroku:
+  stage: deploy
+  image: ruby:2.7 # Imagem do Ruby para o Heroku CLI (dpl)
+  dependencies:
+    - build
+  script:
+    - echo "Iniciando deploy no Heroku..."
+    # Instala a ferramenta de deploy do Heroku
+    - gem install dpl
+    # Comando DPL para deploy, usando as variáveis secretas
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
+    - echo "Deploy concluído!"
+  # Só roda na branch principal (main)
+  only:
+    - main
+  # Só executa se o estágio anterior (test-and-analyze) foi bem-sucedido ou falhou de forma controlada
+  when: on_success
