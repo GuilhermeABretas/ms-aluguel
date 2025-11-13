@@ -34,7 +34,6 @@ test-and-analyze:
     - export SONAR_TOKEN=$SONAR_TOKEN
     # Roda testes unitários, gera cobertura e envia para o SonarCloud
     - mvn clean verify sonar:sonar
-  allow_failure: true
   only:
     - main
     - merge_requests
