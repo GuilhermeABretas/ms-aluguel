@@ -285,4 +285,30 @@ class CiclistaServiceImplTest {
 
         assertThrows(ValidacaoException.class, () -> service.atualizarCartao(ID_EXISTENTE, novoCartaoDTO));
     }
+    @Test
+    void testAtualizarCartao_Sucesso_CiclistaSemCartao() {
+        // Cenário: Ciclista existe, mas não tem cartão.
+        // O método deve criar um cartão novo.
+
+        // Configuração do Mock:
+        // 1. Encontra o ciclista
+        when(ciclistaRepository.findById(ID_EXISTENTE)).thenReturn(Optional.of(ciclistaTeste));
+        // 2. Mock do Pagamento (retorna true)
+        when(pagamentoService.validarCartao(novoCartaoDTO)).thenReturn(true);
+        // 3. NÃO encontra cartão antigo (retorna vazio)
+        when(cartaoRepository.findByCiclistaId(ID_EXISTENTE)).thenReturn(Optional.empty());
+        // 4. Mock do Save
+        when(cartaoRepository.save(any(CartaoDeCredito.class))).thenReturn(new CartaoDeCredito()); // Retorna um cartão novo
+        // 5. Mock do Email
+        doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
+
+        // Execução
+        assertDoesNotThrow(() -> service.atualizarCartao(ID_EXISTENTE, novoCartaoDTO));
+
+        // Verificação
+        verify(pagamentoService, times(1)).validarCartao(novoCartaoDTO);
+        // Verifica se o save foi chamado (para criar o novo cartão)
+        verify(cartaoRepository, times(1)).save(any(CartaoDeCredito.class));
+        verify(emailService, times(1)).enviarEmail(any(), any(), any());
+    }
 }
