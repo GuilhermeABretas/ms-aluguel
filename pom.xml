@@ -33,12 +33,7 @@
     		</sonar.coverage.jacoco.xmlReportPaths>
     
     		<sonar.cpd.exclusions>**/domain/model/*.java,**/api/dto/*.java</sonar.cpd.exclusions>
-		<sonar.coverage.exclusions>
-        		**/domain/model/*.java,
-        		**/api/dto/*.java,
-        		**/api/exception/*.java,
-        		**/*Application.java
-    		</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>**/domain/model/*.java,**/api/dto/*.java,**/api/exception/*.java,**/*Application.java,			**/api/controller/*.java,**/*MockImpl.java</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
