@@ -3,7 +3,7 @@ package br.com.bicicletario.ms_aluguel.api.dto;
 import br.com.bicicletario.ms_aluguel.domain.model.CartaoDeCredito;
 import java.time.LocalDate;
 
-// DTO para a resposta de GET /cartaoDeCredito/{idCiclista}
+
 public class CartaoDeCreditoDTO {
 
     private String nomeTitular;

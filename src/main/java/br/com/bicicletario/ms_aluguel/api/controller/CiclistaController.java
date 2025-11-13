@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/ciclista")
 public class CiclistaController {
 
-    @Autowired
+    public CiclistaController(CiclistaService ciclistaService) {
+        this.ciclistaService = ciclistaService;
+    }
+
     private CiclistaService ciclistaService;
 
     /**

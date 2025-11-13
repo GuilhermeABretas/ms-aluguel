@@ -16,7 +16,11 @@ import java.util.List;
 public class FuncionarioController {
 
     // Agora sim, injetamos o Service
-    @Autowired
+
+    public FuncionarioController(FuncionarioService funcionarioService) {
+        this.funcionarioService = funcionarioService;
+    }
+
     private FuncionarioService funcionarioService;
 
     /**

@@ -1,10 +1,16 @@
 package br.com.bicicletario.ms_aluguel.domain.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "cartoes_de_credito")
+@AllArgsConstructor @NoArgsConstructor
+@Data
 public class CartaoDeCredito {
 
     @Id
@@ -30,57 +36,4 @@ public class CartaoDeCredito {
     @JoinColumn(name = "ciclista_id", referencedColumnName = "id")
     private Ciclista ciclista;
 
-    // --- CONSTRUTOR PADRÃO (JPA) ---
-    public CartaoDeCredito() {
-    }
-
-    // --- GETTERS E SETTERS MANUAIS ---
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNomeTitular() {
-        return nomeTitular;
-    }
-
-    public void setNomeTitular(String nomeTitular) {
-        this.nomeTitular = nomeTitular;
-    }
-
-    public String getNumero() {
-        return numero;
-    }
-
-    public void setNumero(String numero) {
-        this.numero = numero;
-    }
-
-    public LocalDate getValidade() {
-        return validade;
-    }
-
-    public void setValidade(LocalDate validade) {
-        this.validade = validade;
-    }
-
-    public String getCvv() {
-        return cvv;
-    }
-
-    public void setCvv(String cvv) {
-        this.cvv = cvv;
-    }
-
-    public Ciclista getCiclista() {
-        return ciclista;
-    }
-
-    public void setCiclista(Ciclista ciclista) {
-        this.ciclista = ciclista;
-    }
 }

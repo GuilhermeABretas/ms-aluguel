@@ -142,9 +142,6 @@ public class CiclistaServiceImpl implements CiclistaService {
         entidade.setCvv(dto.getCvv());
     }
 
-    /**
-     * Mapeia os dados do DTO de Ciclista para a Entidade.
-     */
     private void mapearNovoCiclistaParaEntidade(NovoCiclistaDTO dto, Ciclista entidade) {
         entidade.setNome(dto.getNome());
         entidade.setNascimento(dto.getNascimento());
@@ -165,9 +162,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         }
     }
 
-    /**
-     * Valida as regras de negócio do UC01
-     */
+
     private void validarCadastro(NovoCiclistaDTO dto) {
         // Validação de duplicidade de email (UC01 - A1)
         if (ciclistaRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -175,16 +170,16 @@ public class CiclistaServiceImpl implements CiclistaService {
         }
 
         if (dto.getNacionalidade() == Nacionalidade.BRASILEIRO) {
-            // (UC01 - R1)
+
             if (dto.getCpf() == null || dto.getCpf().isBlank()) {
                 throw new ValidacaoException("CPF é obrigatório para brasileiros.");
             }
-            // Validação de duplicidade de CPF
+
             if (ciclistaRepository.findByCpf(dto.getCpf()).isPresent()) {
                 throw new ValidacaoException("CPF já cadastrado.");
             }
         } else if (dto.getNacionalidade() == Nacionalidade.ESTRANGEIRO) {
-            // (UC01 - R1)
+
             if (dto.getPassaporte() == null ||
                     dto.getPassaporte().getNumero() == null ||
                     dto.getPassaporte().getPais() == null ||
