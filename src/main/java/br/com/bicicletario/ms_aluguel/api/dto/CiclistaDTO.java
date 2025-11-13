@@ -6,7 +6,7 @@ import br.com.bicicletario.ms_aluguel.domain.model.StatusCiclista;
 
 import java.time.LocalDate;
 
-// DTO para Respostas (GET /ciclista/{id}, POST /ciclista, POST /ciclista/{id}/ativar)
+
 public class CiclistaDTO {
 
     private Long id;

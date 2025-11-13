@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
-// DTO para a requisição de PUT /cartaoDeCredito/{idCiclista}
+
 public class NovoCartaoDeCreditoDTO {
 
     @NotBlank(message = "Nome do titular é obrigatório")

@@ -12,7 +12,7 @@ import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
 
-// DTO para a requisição de POST /ciclista
+
 public class NovoCiclistaDTO {
 
     @NotBlank(message = "Nome é obrigatório")
@@ -22,11 +22,11 @@ public class NovoCiclistaDTO {
     @Past(message = "Data de nascimento deve ser no passado")
     private LocalDate nascimento;
 
-    // CPF só é validado no Service (R1)
+
     @CPF(message = "CPF inválido")
     private String cpf;
 
-    // Passaporte só é validado no Service (R1)
+
     @Valid // Valida os campos dentro do DTO de passaporte
     private NovoPassaporteDTO passaporte;
 
@@ -41,17 +41,17 @@ public class NovoCiclistaDTO {
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String senha;
 
-    // UC01 - R1: "Foto do documento"
+
     @NotBlank(message = "URL da foto do documento é obrigatória")
     @URL(message = "URL da foto inválida")
     private String urlFotoDocumento;
 
-    // O Swagger `POST /ciclista` pede o `meioDePagamento` junto.
+
     @NotNull(message = "Meio de pagamento é obrigatório")
     @Valid
     private NovoCartaoDeCreditoDTO meioDePagamento;
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public String getNome() {
         return nome;

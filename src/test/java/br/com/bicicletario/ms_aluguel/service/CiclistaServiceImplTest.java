@@ -96,26 +96,26 @@ class CiclistaServiceImplTest {
         // 1. Validações de duplicidade (passam)
         when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
         when(ciclistaRepository.findByCpf(CPF_TESTE)).thenReturn(Optional.empty());
-        // 2. Validação de pagamento (passa)
+
         when(pagamentoService.validarCartao(novoCartaoDTO)).thenReturn(true);
-        // 3. Mock do Save (retorna o ciclista com ID)
+
         when(ciclistaRepository.save(any(Ciclista.class))).thenAnswer(invocation -> {
             Ciclista ciclistaSalvo = invocation.getArgument(0);
-            ciclistaSalvo.setId(2L); // Simula o ID gerado pelo banco
-            // Verifica se o status inicial está correto
+            ciclistaSalvo.setId(2L);
+
             assertEquals(StatusCiclista.AGUARDANDO_CONFIRMACAO, ciclistaSalvo.getStatus());
-            // Verifica se o cartão foi associado
+
             assertNotNull(ciclistaSalvo.getCartaoDeCredito());
             assertEquals("5555666677778888", ciclistaSalvo.getCartaoDeCredito().getNumero());
             return ciclistaSalvo;
         });
-        // 4. Mock do Email (não faz nada)
+        //  Mock do Email
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
-        // Execução
+
         CiclistaDTO resultado = service.cadastrarCiclista(novoCiclistaDTO);
 
-        // Verificação
+
         assertNotNull(resultado);
         assertEquals(2L, resultado.getId());
         assertEquals("Novo Ciclista", resultado.getNome());
@@ -127,11 +127,11 @@ class CiclistaServiceImplTest {
 
     @Test
     void testCadastrarCiclista_EmailDuplicado() {
-        // Configuração do Mock:
-        // 1. Validação de email falha
+
+
         when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.of(ciclistaTeste));
 
-        // Verificação
+
         ValidacaoException ex = assertThrows(
                 ValidacaoException.class,
                 () -> service.cadastrarCiclista(novoCiclistaDTO) // Execução
@@ -143,13 +143,13 @@ class CiclistaServiceImplTest {
 
     @Test
     void testCadastrarCiclista_CpfDuplicado() {
-        // Configuração do Mock:
-        // 1. Validação de email passa
+
+
         when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
-        // 2. Validação de CPF falha
+
         when(ciclistaRepository.findByCpf(CPF_TESTE)).thenReturn(Optional.of(ciclistaTeste));
 
-        // Verificação
+
         ValidacaoException ex = assertThrows(
                 ValidacaoException.class,
                 () -> service.cadastrarCiclista(novoCiclistaDTO) // Execução
@@ -161,15 +161,12 @@ class CiclistaServiceImplTest {
 
     @Test
     void testCadastrarCiclista_PagamentoReprovado() {
-        // Configuração do Mock:
-        // 1. Validações de duplicidade (passam)
         when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
         when(ciclistaRepository.findByCpf(CPF_TESTE)).thenReturn(Optional.empty());
-        // 2. Validação de pagamento (falha)
+
         when(pagamentoService.validarCartao(novoCartaoDTO))
                 .thenThrow(new ValidacaoException("Cartão de crédito reprovado pela administradora."));
 
-        // Verificação
         ValidacaoException ex = assertThrows(
                 ValidacaoException.class,
                 () -> service.cadastrarCiclista(novoCiclistaDTO) // Execução
@@ -180,7 +177,7 @@ class CiclistaServiceImplTest {
         verify(emailService, never()).enviarEmail(any(), any(), any());
     }
 
-    // --- Testes UC01: Existe Email ---
+
 
     @Test
     void testExisteEmail_True() {
@@ -196,7 +193,7 @@ class CiclistaServiceImplTest {
         assertFalse(resultado);
     }
 
-    // --- Testes UC02: Ativar Ciclista (Já existentes) ---
+
 
     @Test
     void testAtivarCiclista_Sucesso() {
@@ -209,8 +206,7 @@ class CiclistaServiceImplTest {
         verify(ciclistaRepository, times(1)).save(any(Ciclista.class));
     }
 
-    // ... (Os outros testes de AtivarCiclista_NaoEncontrado e AtivarCiclista_StatusInvalido
-    //      que já escrevemos antes também estão aqui e passam)
+
 
     @Test
     void testAtivarCiclista_NaoEncontrado() {
@@ -225,7 +221,6 @@ class CiclistaServiceImplTest {
         assertThrows(ValidacaoException.class, () -> service.ativarCiclista(ID_EXISTENTE));
     }
 
-    // --- Testes UC07: Buscar Cartão (Já existentes) ---
 
     @Test
     void testBuscarCartao_Sucesso() {
@@ -238,7 +233,6 @@ class CiclistaServiceImplTest {
         assertEquals("1111222233334444", resultado.getNumero());
     }
 
-    // ... (Os outros testes de BuscarCartao_... que já escrevemos antes também estão aqui)
 
     @Test
     void testBuscarCartao_CiclistaNaoEncontrado() {
@@ -253,7 +247,6 @@ class CiclistaServiceImplTest {
         assertThrows(RecursoNaoEncontradoException.class, () -> service.buscarCartao(ID_EXISTENTE));
     }
 
-    // --- Testes UC07: Atualizar Cartão (Já existentes) ---
 
     @Test
     void testAtualizarCartao_Sucesso() {
@@ -269,7 +262,6 @@ class CiclistaServiceImplTest {
         verify(emailService, times(1)).enviarEmail(any(), any(), any());
     }
 
-    // ... (Os outros testes de AtualizarCartao_... que já escrevemos antes também estão aqui)
 
     @Test
     void testAtualizarCartao_CiclistaNaoEncontrado() {
@@ -287,34 +279,28 @@ class CiclistaServiceImplTest {
     }
     @Test
     void testAtualizarCartao_Sucesso_CiclistaSemCartao() {
-        // Cenário: Ciclista existe, mas não tem cartão.
-        // O método deve criar um cartão novo.
 
-        // Configuração do Mock:
-        // 1. Encontra o ciclista
+
         when(ciclistaRepository.findById(ID_EXISTENTE)).thenReturn(Optional.of(ciclistaTeste));
-        // 2. Mock do Pagamento (retorna true)
+
         when(pagamentoService.validarCartao(novoCartaoDTO)).thenReturn(true);
-        // 3. NÃO encontra cartão antigo (retorna vazio)
+
         when(cartaoRepository.findByCiclistaId(ID_EXISTENTE)).thenReturn(Optional.empty());
-        // 4. Mock do Save
+
         when(cartaoRepository.save(any(CartaoDeCredito.class))).thenReturn(new CartaoDeCredito()); // Retorna um cartão novo
-        // 5. Mock do Email
+
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
-        // Execução
         assertDoesNotThrow(() -> service.atualizarCartao(ID_EXISTENTE, novoCartaoDTO));
 
-        // Verificação
         verify(pagamentoService, times(1)).validarCartao(novoCartaoDTO);
-        // Verifica se o save foi chamado (para criar o novo cartão)
+
         verify(cartaoRepository, times(1)).save(any(CartaoDeCredito.class));
         verify(emailService, times(1)).enviarEmail(any(), any(), any());
     }
-    // NOVO TESTE 1: Caminho feliz do Estrangeiro (Cobre o Bloco 1)
+
     @Test
     void testCadastrarCiclista_Sucesso_Estrangeiro() {
-        // --- Configuração Específica ---
         NovoPassaporteDTO passaporteDTO = new NovoPassaporteDTO();
         passaporteDTO.setNumero("G12345678");
         passaporteDTO.setValidade(LocalDate.now().plusYears(5));
@@ -324,29 +310,29 @@ class CiclistaServiceImplTest {
         novoCiclistaDTO.setPassaporte(passaporteDTO);
         novoCiclistaDTO.setCpf(null); // Estrangeiro não tem CPF
 
-        // --- Mocks ---
+
         when(ciclistaRepository.findByEmail(EMAIL_TESTE)).thenReturn(Optional.empty());
         when(pagamentoService.validarCartao(novoCartaoDTO)).thenReturn(true);
         when(ciclistaRepository.save(any(Ciclista.class))).thenAnswer(invocation -> {
             Ciclista ciclistaSalvo = invocation.getArgument(0);
             ciclistaSalvo.setId(2L);
-            // Verifica se o passaporte FOI mapeado
+
             assertNotNull(ciclistaSalvo.getPassaporte());
             assertEquals("G12345678", ciclistaSalvo.getPassaporte().getNumero());
             return ciclistaSalvo;
         });
         doNothing().when(emailService).enviarEmail(anyString(), anyString(), anyString());
 
-        // --- Execução ---
+
         CiclistaDTO resultado = service.cadastrarCiclista(novoCiclistaDTO);
 
-        // --- Verificação ---
+
         assertNotNull(resultado);
         assertEquals(Nacionalidade.ESTRANGEIRO, novoCiclistaDTO.getNacionalidade());
         verify(ciclistaRepository, times(1)).save(any(Ciclista.class));
     }
 
-    // NOVO TESTE 2: Caminho triste do Estrangeiro (Cobre o Bloco 2)
+   
     @Test
     void testCadastrarCiclista_Falha_EstrangeiroSemPassaporte() {
         // --- Configuração Específica ---

@@ -13,10 +13,7 @@ import org.hibernate.validator.constraints.br.CPF;
 
 @Entity
 @Table(name = "funcionarios")
-// @Getter // Removido
-// @Setter // Removido
-// @NoArgsConstructor // Removido
-// @AllArgsConstructor // Removido
+
 public class Funcionario {
 
     @Id
@@ -51,17 +48,11 @@ public class Funcionario {
     @Column(nullable = false)
     private Funcao funcao;
 
-    // --- CONSTRUTORES MANUAIS ---
 
-    /**
-     * Construtor padrão (JPA precisa)
-     */
     public Funcionario() {
     }
 
-    /**
-     * Construtor completo (útil para testes)
-     */
+
     public Funcionario(Long id, String nome, String email, String senha, Integer idade, String cpf, Funcao funcao) {
         this.id = id;
         this.nome = nome;

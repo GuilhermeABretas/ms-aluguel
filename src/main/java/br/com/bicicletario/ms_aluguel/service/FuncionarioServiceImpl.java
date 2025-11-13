@@ -38,12 +38,11 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     @Override
     @Transactional
     public FuncionarioDTO salvar(NovoFuncionarioDTO dto) {
-        // Validação de negócio: (CPF e Email não podem ser duplicados)
+
         validarCpfEEmail(dto.getCpf(), dto.getEmail(), null);
 
         Funcionario entidade = new Funcionario();
-        // A Regra R2 (UC15) diz que a matrícula é gerada automaticamente.
-        // O @GeneratedValue no 'id' da entidade já faz isso.
+
         mapearDtoParaEntidade(dto, entidade);
 
         Funcionario funcionarioSalvo = repository.save(entidade);
@@ -55,11 +54,10 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     public FuncionarioDTO atualizar(Long idFuncionario, NovoFuncionarioDTO dto) {
         Funcionario entidade = buscarFuncionarioPeloId(idFuncionario);
 
-        // Validação de negócio: (CPF e Email não podem ser duplicados por OUTRO funcionário)
+
         validarCpfEEmail(dto.getCpf(), dto.getEmail(), idFuncionario);
 
-        // A Regra R2 (UC15) diz que Matrícula (id) e Documento (cpf) não podem ser editados.
-        // O CPF estamos validando acima, mas vamos garantir que ele não seja alterado.
+
         if (!entidade.getCpf().equals(dto.getCpf())) {
             throw new ValidacaoException("CPF não pode ser alterado.");
         }
@@ -77,20 +75,16 @@ public class FuncionarioServiceImpl implements FuncionarioService {
         repository.delete(entidade);
     }
 
-    // --- MÉTODOS AUXILIARES ---
 
-    /**
-     * Busca o funcionário ou lança uma exceção 404.
-     */
+
+
     private Funcionario buscarFuncionarioPeloId(Long idFuncionario) {
         return repository.findById(idFuncionario)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Funcionário não encontrado com ID: " + idFuncionario));
     }
 
-    /**
-     * Mapeia os dados do DTO de entrada para a Entidade do banco.
-     */
+
     private void mapearDtoParaEntidade(NovoFuncionarioDTO dto, Funcionario entidade) {
         entidade.setNome(dto.getNome());
         entidade.setEmail(dto.getEmail());
@@ -100,9 +94,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
         entidade.setFuncao(dto.getFuncao());
     }
 
-    /**
-     * Valida se o CPF ou Email já estão em uso por outro funcionário.
-     */
+
     private void validarCpfEEmail(String cpf, String email, Long idAtual) {
         Optional<Funcionario> porCpf = repository.findByCpf(cpf);
         if (porCpf.isPresent() && (idAtual == null || !porCpf.get().getId().equals(idAtual))) {

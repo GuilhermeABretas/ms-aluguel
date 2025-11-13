@@ -10,9 +10,9 @@ import jakarta.validation.constraints.Size;
 // import lombok.Setter; // Removido
 import org.hibernate.validator.constraints.br.CPF;
 
-// DTO para POST /funcionario e PUT /funcionario/{id}
-// @Getter // Removido
-// @Setter // Removido
+
+
+
 public class NovoFuncionarioDTO {
 
     @NotBlank(message = "Nome não pode estar em branco")
@@ -35,9 +35,9 @@ public class NovoFuncionarioDTO {
     private String cpf;
 
     @NotNull(message = "Função não pode ser nula")
-    private Funcao funcao; // (ADMINISTRATIVO ou REPARADOR)
+    private Funcao funcao;
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public String getNome() {
         return nome;
