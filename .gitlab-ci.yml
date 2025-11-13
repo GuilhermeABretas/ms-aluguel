@@ -30,10 +30,15 @@ test-and-analyze:
     - build
   script:
     - echo "Iniciando testes e analise com SonarCloud..."
-    # Configura o token de analise do Sonar
-    - export SONAR_TOKEN=$SONAR_TOKEN
+  
     # Roda testes unitários, gera cobertura e envia para o SonarCloud
-    - mvn clean verify sonar:sonar
+# passando as variáveis do GitLab para o Maven
+    - mvn clean verify sonar:sonar 
+        -Dsonar.organization=$SONAR_ORGANIZATION 
+        -Dsonar.projectKey=$SONAR_PROJECT_KEY 
+        -Dsonar.host.url=$SONAR_HOST_URL 
+        -Dsonar.token=$SONAR_TOKEN
+    
   only:
     - main
     - merge_requests
