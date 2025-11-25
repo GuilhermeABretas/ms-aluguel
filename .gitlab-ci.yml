@@ -5,9 +5,7 @@ stages:
   - test-and-analyze
   - deploy
 
-# ------------------------------------
-# 1. BUILD (Gera o .jar)
-# ------------------------------------
+
 build:
   stage: build
   script:
@@ -20,46 +18,37 @@ build:
     - main
     - merge_requests
 
-# ------------------------------------
-# 2. TEST AND ANALYZE (SonarCloud)
-# ------------------------------------
+
 test-and-analyze:
   stage: test-and-analyze
-  # Garante que o build terminou
+
   dependencies:
     - build
   script:
     - echo "Iniciando testes e analise com SonarCloud..."
-  
-    # Roda testes unitários, gera cobertura e envia para o SonarCloud
-# passando as variáveis do GitLab para o Maven
-    - mvn clean verify sonar:sonar 
-        -Dsonar.organization=$SONAR_ORGANIZATION 
-        -Dsonar.projectKey=$SONAR_PROJECT_KEY 
-        -Dsonar.host.url=$SONAR_HOST_URL 
-        -Dsonar.token=$SONAR_TOKEN
-    
+
+
+    - mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization=$SONAR_ORGANIZATION -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.token=$SONAR_TOKEN
+
   only:
     - main
     - merge_requests
 
-# ------------------------------------
-# 3. DEPLOY (Heroku)
-# ------------------------------------
+
 deploy-to-heroku:
   stage: deploy
-  image: ruby:3.2 # Imagem do Ruby para o Heroku CLI (dpl)
+  image: ruby:3.2
   dependencies:
     - build
   script:
     - echo "Iniciando deploy no Heroku..."
-    # Instala a ferramenta de deploy do Heroku
+
     - gem install dpl
-    # Comando DPL para deploy, usando as variáveis secretas
+
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
     - echo "Deploy concluído!"
-  # Só roda na branch principal (main)
+
   only:
     - main
-  # Só executa se o estágio anterior (test-and-analyze) foi bem-sucedido ou falhou de forma controlada
+
   when: on_success
