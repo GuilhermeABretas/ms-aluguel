@@ -332,7 +332,7 @@ class CiclistaServiceImplTest {
         verify(ciclistaRepository, times(1)).save(any(Ciclista.class));
     }
 
-   
+
     @Test
     void testCadastrarCiclista_Falha_EstrangeiroSemPassaporte() {
         // --- Configuração Específica ---
