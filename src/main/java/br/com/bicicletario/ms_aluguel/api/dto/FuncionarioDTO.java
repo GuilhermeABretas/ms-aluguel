@@ -26,7 +26,7 @@ public class FuncionarioDTO {
         this.funcao = entidade.getFuncao();
     }
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public Long getMatricula() {
         return matricula;

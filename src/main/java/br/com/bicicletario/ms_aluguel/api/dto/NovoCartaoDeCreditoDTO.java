@@ -24,7 +24,7 @@ public class NovoCartaoDeCreditoDTO {
     @Pattern(regexp = "\\d{3,4}", message = "CVV deve conter apenas dígitos")
     private String cvv;
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public String getNomeTitular() {
         return nomeTitular;

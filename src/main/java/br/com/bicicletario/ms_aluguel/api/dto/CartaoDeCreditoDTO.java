@@ -7,22 +7,21 @@ import java.time.LocalDate;
 public class CartaoDeCreditoDTO {
 
     private String nomeTitular;
-    private String numero; // Nota: Em um sistema real, mascararíamos isso
+    private String numero;
     private LocalDate validade;
-    // Não retornamos o CVV por segurança
 
-    // Construtor padrão
+
+
     public CartaoDeCreditoDTO() {
     }
 
-    // Construtor para mapeamento
+
     public CartaoDeCreditoDTO(CartaoDeCredito entidade) {
         this.nomeTitular = entidade.getNomeTitular();
         this.numero = entidade.getNumero();
         this.validade = entidade.getValidade();
     }
 
-    // --- GETTERS E SETTERS MANUAIS ---
 
     public String getNomeTitular() {
         return nomeTitular;

@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Embeddable
-@Data // Aqui é seguro e prático
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Passaporte {
 
     private String numero;
     private LocalDate validade;
-    private String pais; // Swagger define como "countrycode" de 2 dígitos
+    private String pais;
 
 }

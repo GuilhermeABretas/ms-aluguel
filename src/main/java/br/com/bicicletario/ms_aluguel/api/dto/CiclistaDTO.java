@@ -13,18 +13,18 @@ public class CiclistaDTO {
     private String nome;
     private LocalDate nascimento;
     private String cpf;
-    // Não vamos expor o passaporte inteiro, talvez só o país
+
     private String paisPassaporte;
     private Nacionalidade nacionalidade;
     private String email;
     private String urlFotoDocumento;
     private StatusCiclista status;
 
-    // Construtor padrão
+
     public CiclistaDTO() {
     }
 
-    // Construtor para mapeamento fácil
+
     public CiclistaDTO(Ciclista entidade) {
         this.id = entidade.getId();
         this.nome = entidade.getNome();
@@ -39,7 +39,7 @@ public class CiclistaDTO {
         this.status = entidade.getStatus();
     }
 
-    // --- GETTERS E SETTERS MANUAIS ---
+
 
     public Long getId() {
         return id;
