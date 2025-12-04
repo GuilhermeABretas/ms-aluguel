@@ -7,65 +7,63 @@ import br.com.bicicletario.ms_aluguel.api.dto.NovoCiclistaDTO;
 import br.com.bicicletario.ms_aluguel.api.exception.RecursoNaoEncontradoException;
 import br.com.bicicletario.ms_aluguel.api.exception.ValidacaoException;
 import br.com.bicicletario.ms_aluguel.domain.model.*;
+import br.com.bicicletario.ms_aluguel.domain.repository.AluguelRepository; // IMPORT NOVO
 import br.com.bicicletario.ms_aluguel.domain.repository.CartaoDeCreditoRepository;
 import br.com.bicicletario.ms_aluguel.domain.repository.CiclistaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class CiclistaServiceImpl implements CiclistaService {
 
-    @Autowired
-    private CiclistaRepository ciclistaRepository;
+    // Dependências (Sem @Autowired, usando final)
+    private final CiclistaRepository ciclistaRepository;
+    private final CartaoDeCreditoRepository cartaoRepository;
+    private final AluguelRepository aluguelRepository; // Adicionado
+    private final PagamentoService pagamentoService;
+    private final EmailService emailService;
 
-    @Autowired
-    private CartaoDeCreditoRepository cartaoRepository;
+    // Construtor para Injeção de Dependência
+    public CiclistaServiceImpl(
+            CiclistaRepository ciclistaRepository,
+            CartaoDeCreditoRepository cartaoRepository,
+            AluguelRepository aluguelRepository,
+            PagamentoService pagamentoService,
+            EmailService emailService) {
+        this.ciclistaRepository = ciclistaRepository;
+        this.cartaoRepository = cartaoRepository;
+        this.aluguelRepository = aluguelRepository;
+        this.pagamentoService = pagamentoService;
+        this.emailService = emailService;
+    }
 
-    @Autowired
-    private PagamentoService pagamentoService;
-
-    @Autowired
-    private EmailService emailService;
-
-
-    // --- Lógica UC01 (Nova) ---
-
+    // --- UC01: Cadastrar ---
     @Override
     @Transactional
     public CiclistaDTO cadastrarCiclista(NovoCiclistaDTO dto) {
-        // 1. Validação de Email e CPF/Passaporte (UC01 - R1, A1, A2)
         validarCadastro(dto);
-
-        // 2. Validação do Cartão de Crédito (Mock) (UC01 - Fluxo Principal 7)
-        // Se reprovado (termina em 9999), o mock lança ValidacaoException (UC01 - A3)
         pagamentoService.validarCartao(dto.getMeioDePagamento());
 
-        // 3. Mapeia DTOs para Entidades
         Ciclista ciclista = new Ciclista();
         mapearNovoCiclistaParaEntidade(dto, ciclista);
 
         CartaoDeCredito cartao = new CartaoDeCredito();
         mapearNovoCartaoParaEntidade(dto.getMeioDePagamento(), cartao);
 
-        // Associa as entidades
         cartao.setCiclista(ciclista);
         ciclista.setCartaoDeCredito(cartao);
 
-        // 4. Salva no banco (UC01 - Fluxo Principal 8)
-        // O cascade no Ciclista salva o cartão junto.
         Ciclista ciclistaSalvo = ciclistaRepository.save(ciclista);
 
-        // 5. Envia email (Mock) (UC01 - Fluxo Principal 9)
         emailService.enviarEmail(
                 ciclistaSalvo.getEmail(),
                 "Confirme seu cadastro",
                 "Bem-vindo! Clique no link para ativar seu cadastro: /ciclista/" + ciclistaSalvo.getId() + "/ativar"
         );
 
-        // 6. Retorna DTO (UC01 - Fluxo Principal 10)
         return new CiclistaDTO(ciclistaSalvo);
     }
 
@@ -75,8 +73,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         return ciclistaRepository.findByEmail(email).isPresent();
     }
 
-    // --- Lógica UC02 (Já existente) ---
-
+    // --- UC02: Ativar ---
     @Override
     @Transactional
     public CiclistaDTO ativarCiclista(Long idCiclista) {
@@ -92,8 +89,64 @@ public class CiclistaServiceImpl implements CiclistaService {
         return new CiclistaDTO(ciclistaAtivado);
     }
 
-    // --- Lógica UC07 (Já existente) ---
+    // --- UC06: Buscar e Atualizar (NOVOS) ---
 
+    @Override
+    @Transactional(readOnly = true)
+    public CiclistaDTO buscarPorId(Long idCiclista) {
+        Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
+        return new CiclistaDTO(ciclista);
+    }
+
+    @Override
+    @Transactional
+    public CiclistaDTO atualizarCiclista(Long idCiclista, NovoCiclistaDTO dto) {
+        Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
+
+        // Regra: Não pode usar email já existente (se for de outro ID)
+        Optional<Ciclista> emailExistente = ciclistaRepository.findByEmail(dto.getEmail());
+        if (emailExistente.isPresent() && !emailExistente.get().getId().equals(idCiclista)) {
+            throw new ValidacaoException("Email já cadastrado por outro ciclista.");
+        }
+
+        // Atualiza os dados permitidos
+        ciclista.setNome(dto.getNome());
+        ciclista.setNacionalidade(dto.getNacionalidade());
+        ciclista.setNascimento(dto.getNascimento());
+        ciclista.setUrlFotoDocumento(dto.getUrlFotoDocumento());
+        // CPF geralmente não muda, mas se quiser permitir: ciclista.setCpf(dto.getCpf());
+
+        // Nota: Senha e Cartão tem fluxos separados, não atualizamos aqui.
+
+        Ciclista atualizado = ciclistaRepository.save(ciclista);
+        return new CiclistaDTO(atualizado);
+    }
+
+    // --- Helpers (NOVOS) ---
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean permiteAluguel(Long idCiclista) {
+        Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
+
+        // Regra 1: Precisa estar ATIVO
+        if (ciclista.getStatus() != StatusCiclista.ATIVO) {
+            return false;
+        }
+
+        // Regra 2: Não pode ter aluguel em aberto
+        Optional<Aluguel> aluguelAberto = aluguelRepository.findByCiclistaIdAndDataHoraDevolucaoIsNull(idCiclista);
+        return aluguelAberto.isEmpty();
+    }
+
+    @Override
+    public CiclistaDTO obterBicicletaAlugada(Long idCiclista) {
+        // Placeholder: No futuro, buscaremos o aluguel ativo e retornaremos dados da bicicleta.
+        // Por enquanto, retorna null conforme combinado (fase pré-integração).
+        return null;
+    }
+
+    // --- UC07: Cartão ---
     @Override
     @Transactional(readOnly = true)
     public CartaoDeCreditoDTO buscarCartao(Long idCiclista) {
@@ -125,16 +178,12 @@ public class CiclistaServiceImpl implements CiclistaService {
     }
 
     // --- MÉTODOS AUXILIARES ---
-
     private Ciclista buscarCiclistaPeloId(Long idCiclista) {
         return ciclistaRepository.findById(idCiclista)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Ciclista não encontrado com ID: " + idCiclista));
     }
 
-    /**
-     * Mapeia os dados do DTO de Cartão para a Entidade.
-     */
     private void mapearNovoCartaoParaEntidade(NovoCartaoDeCreditoDTO dto, CartaoDeCredito entidade) {
         entidade.setNomeTitular(dto.getNomeTitular());
         entidade.setNumero(dto.getNumero());
@@ -148,11 +197,10 @@ public class CiclistaServiceImpl implements CiclistaService {
         entidade.setCpf(dto.getCpf());
         entidade.setNacionalidade(dto.getNacionalidade());
         entidade.setEmail(dto.getEmail());
-        entidade.setSenha(dto.getSenha()); // (Em um projeto real, criptografar)
+        entidade.setSenha(dto.getSenha());
         entidade.setUrlFotoDocumento(dto.getUrlFotoDocumento());
-        entidade.setStatus(StatusCiclista.AGUARDANDO_CONFIRMACAO); // Status inicial
+        entidade.setStatus(StatusCiclista.AGUARDANDO_CONFIRMACAO);
 
-        // Mapeia o passaporte
         if (dto.getNacionalidade() == Nacionalidade.ESTRANGEIRO && dto.getPassaporte() != null) {
             Passaporte p = new Passaporte();
             p.setNumero(dto.getPassaporte().getNumero());
@@ -162,28 +210,19 @@ public class CiclistaServiceImpl implements CiclistaService {
         }
     }
 
-
     private void validarCadastro(NovoCiclistaDTO dto) {
-        // Validação de duplicidade de email (UC01 - A1)
         if (ciclistaRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new ValidacaoException("Email já cadastrado.");
         }
-
         if (dto.getNacionalidade() == Nacionalidade.BRASILEIRO) {
-
             if (dto.getCpf() == null || dto.getCpf().isBlank()) {
                 throw new ValidacaoException("CPF é obrigatório para brasileiros.");
             }
-
             if (ciclistaRepository.findByCpf(dto.getCpf()).isPresent()) {
                 throw new ValidacaoException("CPF já cadastrado.");
             }
         } else if (dto.getNacionalidade() == Nacionalidade.ESTRANGEIRO) {
-
-            if (dto.getPassaporte() == null ||
-                    dto.getPassaporte().getNumero() == null ||
-                    dto.getPassaporte().getPais() == null ||
-                    dto.getPassaporte().getValidade() == null) {
+            if (dto.getPassaporte() == null || dto.getPassaporte().getNumero() == null) {
                 throw new ValidacaoException("Dados do passaporte são obrigatórios para estrangeiros.");
             }
         }
