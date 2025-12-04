@@ -30,8 +30,16 @@ public class Aluguel {
 
     private Double valorCobrado; // Preenchido na devolução
 
-    // --- CONSTRUTOR PADRÃO ---
+    // --- CONSTRUTOR PADRÃO (Obrigatório para o JPA) ---
     public Aluguel() {
+    }
+
+    // --- CONSTRUTOR COM ARGUMENTOS (Resolve Duplication e facilita Testes) ---
+    public Aluguel(Ciclista ciclista, Long idBicicleta, Long idTrancaInicio, LocalDateTime dataHoraRetirada) {
+        this.ciclista = ciclista;
+        this.idBicicleta = idBicicleta;
+        this.idTrancaInicio = idTrancaInicio;
+        this.dataHoraRetirada = dataHoraRetirada;
     }
 
     // --- GETTERS E SETTERS ---
