@@ -31,9 +31,7 @@
 		<sonar.coverage.jacoco.xmlReportPaths>
         		${project.build.directory}/site/jacoco/jacoco.xml
     		</sonar.coverage.jacoco.xmlReportPaths>
-    
-    		<sonar.cpd.exclusions>**/domain/model/*.java,**/api/dto/*.java</sonar.cpd.exclusions>
-		<sonar.coverage.exclusions>**/domain/model/*.java,**/api/dto/*.java,**/api/exception/*.java,**/*Application.java,			**/api/controller/*.java,**/*MockImpl.java</sonar.coverage.exclusions>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -48,6 +46,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -68,6 +67,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
+
 	</dependencies>
 
 	<build>
