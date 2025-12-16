@@ -61,24 +61,21 @@ class AluguelServiceImplTest {
         aluguelAtivo = new Aluguel();
         aluguelAtivo.setId(50L);
         aluguelAtivo.setCiclista(ciclista);
-        aluguelAtivo.setIdBicicleta(100L);
-        aluguelAtivo.setDataHoraRetirada(LocalDateTime.now().minusMinutes(30)); // Pegou há 30 min
+        aluguelAtivo.setBicicletaId(100L);
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
 
         novaDevolucaoDTO = new NovaDevolucaoDTO();
         novaDevolucaoDTO.setIdBicicleta(100L);
         novaDevolucaoDTO.setIdTranca(20L);
     }
 
-    // --- TESTES DE ALUGUEL (UC03) ---
-
     @Test
     void testRealizarAluguel_Sucesso() {
-        // GIVEN
         when(ciclistaService.permiteAluguel(1L)).thenReturn(true);
         when(ciclistaRepository.findById(1L)).thenReturn(Optional.of(ciclista));
         when(cartaoRepository.findByCiclistaId(1L)).thenReturn(Optional.of(cartao));
         when(equipamentoService.recuperarBicicletaPorTranca(10L)).thenReturn(100L);
-        when(pagamentoService.validarCartao(any())).thenReturn(true);
+        doNothing().when(pagamentoService).realizarCobranca(any(), any());
 
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> {
             Aluguel a = i.getArgument(0);
@@ -86,69 +83,52 @@ class AluguelServiceImplTest {
             return a;
         });
 
-        // WHEN
         AluguelDTO resultado = service.realizarAluguel(novoAluguelDTO);
 
-        // THEN
         assertNotNull(resultado.getId());
-        assertEquals(100L, resultado.getBicicleta());
+        assertEquals(100L, resultado.getBicicletaId());
 
-        verify(equipamentoService).destrancarTranca(10L); // Tranca abriu?
-        verify(emailService).enviarEmail(anyString(), anyString(), anyString()); // Email enviado?
+        verify(equipamentoService).destrancarTranca(10L);
+        verify(emailService).enviarEmail(anyString(), anyString(), anyString());
     }
 
     @Test
     void testRealizarAluguel_CiclistaNaoApto() {
-        // GIVEN: Ciclista tem pendência
         when(ciclistaService.permiteAluguel(1L)).thenReturn(false);
 
-        // WHEN & THEN
         assertThrows(ValidacaoException.class, () -> service.realizarAluguel(novoAluguelDTO));
 
         verify(aluguelRepository, never()).save(any());
         verify(equipamentoService, never()).destrancarTranca(anyLong());
     }
 
-    // --- TESTES DE DEVOLUÇÃO (UC04) ---
-
     @Test
     void testRealizarDevolucao_NoPrazo() {
-        // GIVEN: Aluguel de 30 min atrás (dentro das 2h)
-        aluguelAtivo.setDataHoraRetirada(LocalDateTime.now().minusMinutes(30));
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
 
-        when(aluguelRepository.findByBicicletaAndDevolucaoNull(100L)).thenReturn(Optional.of(aluguelAtivo));
+        when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
 
-        // WHEN
-        AluguelDTO resultado = service.realizarDevolucao(novaDevolucaoDTO);
+        service.realizarDevolucao(novaDevolucaoDTO);
 
-        // THEN
-        assertNotNull(resultado.getDataHoraDevolucao());
-        assertEquals(10.0, resultado.getValorCobrado()); // Apenas taxa fixa
+        assertNotNull(aluguelAtivo.getDataHoraDevolucao());
+        assertEquals(10.0, aluguelAtivo.getValorCobrado());
 
-        // Verifica que NÃO cobrou extra
-        verify(pagamentoService, never()).validarCartao(any());
+        verify(pagamentoService, never()).realizarCobranca(any(), any());
     }
 
     @Test
     void testRealizarDevolucao_ComAtraso() {
-        // GIVEN: Aluguel de 3 horas atrás (180 min)
-        // 180 min totais - 120 min franquia = 60 min extra
-        // 60 min * 0.50 = R$ 30.00 extra
-        // Total esperado: 10.0 + 30.0 = 40.0
-        aluguelAtivo.setDataHoraRetirada(LocalDateTime.now().minusMinutes(180));
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(180));
 
-        when(aluguelRepository.findByBicicletaAndDevolucaoNull(100L)).thenReturn(Optional.of(aluguelAtivo));
+        when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
-        when(pagamentoService.validarCartao(any())).thenReturn(true); // Cobrança extra passa
+        doNothing().when(pagamentoService).realizarCobranca(any(), anyDouble());
 
-        // WHEN
-        AluguelDTO resultado = service.realizarDevolucao(novaDevolucaoDTO);
+        service.realizarDevolucao(novaDevolucaoDTO);
 
-        // THEN
-        assertEquals(40.0, resultado.getValorCobrado());
+        assertEquals(20.0, aluguelAtivo.getValorCobrado());
 
-        // Verifica se cobrou o extra
-        verify(pagamentoService).validarCartao(any());
+        verify(pagamentoService).realizarCobranca(any(), eq(10.0));
     }
 }
