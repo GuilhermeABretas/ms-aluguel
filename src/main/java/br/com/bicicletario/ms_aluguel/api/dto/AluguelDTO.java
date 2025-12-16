@@ -20,7 +20,7 @@ public class AluguelDTO {
         this.valorCobrado = entidade.getValorCobrado();
     }
 
-    // Getters e Setters manuais (Omitidos pra economizar espaço, gere na IDE)
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getCiclista() { return ciclista; }
