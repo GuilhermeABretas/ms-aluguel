@@ -117,6 +117,14 @@ public class CiclistaServiceImpl implements CiclistaService {
         // CPF geralmente não muda. Senha e Cartão tem fluxos separados.
 
         Ciclista atualizado = ciclistaRepository.save(ciclista);
+
+        // --- CORREÇÃO: ENVIO DE EMAIL ADICIONADO AQUI ---
+        emailService.enviarEmail(
+                atualizado.getEmail(),
+                "Atualização de Dados Cadastrais",
+                "Seus dados cadastrais foram atualizados com sucesso em nosso sistema."
+        );
+
         return new CiclistaDTO(atualizado);
     }
 

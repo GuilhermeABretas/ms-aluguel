@@ -1,4 +1,4 @@
-package br.com.bicicletario.seumicrosservico.dto.externo;
+package br.com.bicicletario.ms_aluguel.api.dto.externo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
