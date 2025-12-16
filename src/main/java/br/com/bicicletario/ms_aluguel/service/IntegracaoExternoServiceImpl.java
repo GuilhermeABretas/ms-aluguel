@@ -12,10 +12,7 @@ import br.com.bicicletario.ms_aluguel.domain.model.CartaoDeCredito;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-/**
- * Implementação REAL que conecta com os microsserviços externos.
- * O @Primary faz o Spring injetar esta classe no lugar dos Mocks.
- */
+
 @Service
 @Primary
 public class IntegracaoExternoServiceImpl implements EquipamentoService, PagamentoService, EmailService {
@@ -28,14 +25,14 @@ public class IntegracaoExternoServiceImpl implements EquipamentoService, Pagamen
         this.externoClient = externoClient;
     }
 
-    // --- EQUIPAMENTO SERVICE ---
+
     @Override
     public Long recuperarBicicletaPorTranca(Long idTranca) {
         try {
             BicicletaDTO bike = equipamentoClient.recuperarBicicletaPorTranca(idTranca);
             return bike != null ? bike.getId() : null;
         } catch (Exception e) {
-            // Se der 404 ou erro, assumimos que não tem bicicleta ou tranca inválida
+
             return null;
         }
     }
@@ -45,7 +42,7 @@ public class IntegracaoExternoServiceImpl implements EquipamentoService, Pagamen
         equipamentoClient.destrancarTranca(idTranca);
     }
 
-    // --- PAGAMENTO SERVICE ---
+
     @Override
     public void validarCartao(NovoCartaoDeCreditoDTO cartao) {
         ValidacaoCartaoRequest request = new ValidacaoCartaoRequest(
@@ -65,8 +62,8 @@ public class IntegracaoExternoServiceImpl implements EquipamentoService, Pagamen
     public void realizarCobranca(CartaoDeCredito cartao, Double valor) {
         CobrancaRequest request = new CobrancaRequest(
                 valor,
-                cartao.getCiclista().getId(), // Id do ciclista
-                cartao.getNumero() // Opcional: número para teste
+                cartao.getCiclista().getId(),
+                cartao.getNumero()
         );
         try {
             externoClient.realizarCobranca(request);
@@ -75,7 +72,7 @@ public class IntegracaoExternoServiceImpl implements EquipamentoService, Pagamen
         }
     }
 
-    // --- EMAIL SERVICE ---
+
     @Override
     public void enviarEmail(String email, String assunto, String mensagem) {
         try {

@@ -56,8 +56,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
 
         validarCpfEEmail(dto.getCpf(), dto.getEmail(), idFuncionario);
 
-        // O Swagger não proíbe explicitamente mudar o CPF, mas é boa prática bloquear.
-        // Se quiser permitir, remova este bloco.
+
         if (!entidade.getCpf().equals(dto.getCpf())) {
             throw new ValidacaoException("CPF não pode ser alterado.");
         }

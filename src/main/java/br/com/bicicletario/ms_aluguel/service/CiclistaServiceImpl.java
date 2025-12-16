@@ -39,7 +39,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         this.emailService = emailService;
     }
 
-    // --- UC01: Cadastrar ---
+
     @Override
     @Transactional
     public CiclistaDTO cadastrarCiclista(NovoCiclistaDTO dto) {
@@ -72,7 +72,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         return ciclistaRepository.findByEmail(email).isPresent();
     }
 
-    // --- UC02: Ativar ---
+
     @Override
     @Transactional
     public CiclistaDTO ativarCiclista(Long idCiclista) {
@@ -88,7 +88,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         return new CiclistaDTO(ciclistaAtivado);
     }
 
-    // --- UC06: Buscar e Atualizar ---
+
 
     @Override
     @Transactional(readOnly = true)
@@ -103,22 +103,22 @@ public class CiclistaServiceImpl implements CiclistaService {
         Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
         NovoCiclistaDTO.DadosCiclista dados = dto.getCiclista();
 
-        // Regra: Não pode usar email já existente
+
         Optional<Ciclista> emailExistente = ciclistaRepository.findByEmail(dados.getEmail());
         if (emailExistente.isPresent() && !emailExistente.get().getId().equals(idCiclista)) {
             throw new ValidacaoException("Email já cadastrado por outro ciclista.");
         }
 
-        // Atualiza os dados permitidos
+
         ciclista.setNome(dados.getNome());
         ciclista.setNacionalidade(dados.getNacionalidade());
         ciclista.setNascimento(dados.getNascimento());
         ciclista.setUrlFotoDocumento(dados.getUrlFotoDocumento());
-        // CPF geralmente não muda. Senha e Cartão tem fluxos separados.
+
 
         Ciclista atualizado = ciclistaRepository.save(ciclista);
 
-        // --- CORREÇÃO: ENVIO DE EMAIL ADICIONADO AQUI ---
+
         emailService.enviarEmail(
                 atualizado.getEmail(),
                 "Atualização de Dados Cadastrais",
@@ -128,31 +128,30 @@ public class CiclistaServiceImpl implements CiclistaService {
         return new CiclistaDTO(atualizado);
     }
 
-    // --- Helpers e Integrações ---
+
 
     @Override
     @Transactional(readOnly = true)
     public boolean permiteAluguel(Long idCiclista) {
         Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
 
-        // Regra 1: Precisa estar ATIVO
+
         if (ciclista.getStatus() != StatusCiclista.ATIVO) {
             return false;
         }
 
-        // Regra 2: Não pode ter aluguel em aberto
+
         Optional<Aluguel> aluguelAberto = aluguelRepository.findByCiclistaIdAndDataHoraDevolucaoIsNull(idCiclista);
         return aluguelAberto.isEmpty();
     }
 
     @Override
     public BicicletaDTO obterBicicletaAlugada(Long idCiclista) {
-        // Placeholder: No futuro, buscaremos o aluguel ativo e retornaremos dados da bicicleta.
-        // Por enquanto, retorna null conforme combinado (fase pré-integração).
+
         return null;
     }
 
-    // --- UC07: Cartão ---
+
     @Override
     @Transactional(readOnly = true)
     public CartaoDeCreditoDTO buscarCartao(Long idCiclista) {
@@ -183,7 +182,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         );
     }
 
-    // --- MÉTODOS AUXILIARES ---
+
     private Ciclista buscarCiclistaPeloId(Long idCiclista) {
         return ciclistaRepository.findById(idCiclista)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(

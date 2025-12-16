@@ -19,9 +19,7 @@ public class CartaoDeCreditoController {
         this.ciclistaService = ciclistaService;
     }
 
-    /**
-     * UC07 - Recupera dados de cartão de crédito de um ciclista
-     */
+
     @GetMapping("/{idCiclista}")
     public ResponseEntity<CartaoDeCreditoDTO> getCartaoDeCredito(@PathVariable Long idCiclista) {
 
@@ -29,9 +27,7 @@ public class CartaoDeCreditoController {
         return ResponseEntity.ok(cartao);
     }
 
-    /**
-     * UC07 - Alterar dados de cartão de crédito de um ciclista
-     */
+
     @PutMapping("/{idCiclista}")
     public ResponseEntity<Void> atualizarCartaoDeCredito(
             @PathVariable Long idCiclista,

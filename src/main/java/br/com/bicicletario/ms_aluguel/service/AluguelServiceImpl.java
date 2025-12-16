@@ -49,31 +49,31 @@ public class AluguelServiceImpl implements AluguelService {
     @Override
     @Transactional
     public AluguelDTO realizarAluguel(NovoAluguelDTO dto) {
-        // 1. Validar se ciclista pode alugar
+
         if (!ciclistaService.permiteAluguel(dto.getCiclista())) {
             throw new ValidacaoException("Ciclista não apto para alugar (pendente, inativo ou já possui aluguel).");
         }
 
-        // 2. Buscar Entidade Ciclista (Necessário para salvar no Aluguel)
+
         Ciclista ciclista = ciclistaRepository.findById(dto.getCiclista())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Ciclista não encontrado"));
 
-        // 3. Verificar bicicleta na tranca
+
         Long idBicicleta = equipamentoService.recuperarBicicletaPorTranca(dto.getTrancaInicio());
         if (idBicicleta == null) {
             throw new ValidacaoException("Não há bicicleta na tranca informada.");
         }
 
-        // 4. Cobrança
+
         CartaoDeCredito cartao = cartaoRepository.findByCiclistaId(dto.getCiclista())
                 .orElseThrow(() -> new ValidacaoException("Ciclista não possui cartão para cobrança."));
 
         pagamentoService.realizarCobranca(cartao, CUSTO_FIXO_INICIAL);
 
-        // 5. Destrancar
+
         equipamentoService.destrancarTranca(dto.getTrancaInicio());
 
-        // 6. Criar Aluguel
+
         Aluguel aluguel = new Aluguel();
         aluguel.setCiclista(ciclista); // Define o objeto Ciclista
         aluguel.setTrancaInicioId(dto.getTrancaInicio());
@@ -83,7 +83,7 @@ public class AluguelServiceImpl implements AluguelService {
 
         aluguelRepository.save(aluguel);
 
-        // 7. Notificar
+
         emailService.enviarEmail(ciclista.getEmail(), "Aluguel Realizado",
                 "Sua bicicleta foi liberada! Bom passeio.");
 
@@ -93,16 +93,16 @@ public class AluguelServiceImpl implements AluguelService {
     @Override
     @Transactional
     public DevolucaoDTO realizarDevolucao(NovaDevolucaoDTO dto) {
-        // 1. Buscar aluguel ativo pela bicicleta
+
         Aluguel aluguel = aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(dto.getIdBicicleta())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Nenhum aluguel ativo encontrado para esta bicicleta."));
 
-        // 2. Registrar devolução
+
         LocalDateTime agora = LocalDateTime.now();
         aluguel.setDataHoraDevolucao(agora);
         aluguel.setTrancaFimId(dto.getIdTranca());
 
-        // 3. Calcular custos
+
         Double valorExtra = calcularCustoExtra(aluguel.getDataHoraInicio(), agora);
 
         if (valorExtra > 0) {
@@ -115,7 +115,7 @@ public class AluguelServiceImpl implements AluguelService {
 
         aluguelRepository.save(aluguel);
 
-        // 4. Notificar
+
         String corpoEmail = "Devolução confirmada em " + agora + ". ";
         if (valorExtra > 0) {
             corpoEmail += "Cobrança extra de R$ " + valorExtra + " realizada.";

@@ -30,15 +30,15 @@ public class RestaurarBancoController {
     }
 
     @GetMapping("/restaurarBanco")
-    @Transactional // Essencial para operações em lote
+    @Transactional
     public ResponseEntity<String> restaurarBanco() {
-        // 1. Limpar todas as tabelas (Ordem importa por causa das chaves estrangeiras)
+
         aluguelRepository.deleteAll();
         cartaoRepository.deleteAll();
         ciclistaRepository.deleteAll();
         funcionarioRepository.deleteAll();
 
-        // 2. Inserir dados iniciais (Seed) para não deixar o sistema vazio
+
         criarFuncionarioAdmin();
 
         return ResponseEntity.ok("Banco restaurado com sucesso");

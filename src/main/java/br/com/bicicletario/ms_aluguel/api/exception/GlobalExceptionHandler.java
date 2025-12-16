@@ -40,13 +40,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(erros);
     }
 
-    // --- NOVO MÉTODO PARA ERROS DE JSON (ENUMs, Datas inválidas, etc) ---
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErroDTO> handleJsonErrors(HttpMessageNotReadableException ex) {
         String msg = ex.getMessage();
         if (ex.getCause() != null && ex.getCause().getMessage() != null) {
             msg = ex.getCause().getMessage();
-            // Remove detalhes técnicos excessivos do Jackson, se houver
+
             if (msg.contains("problem:")) {
                 msg = msg.substring(0, msg.indexOf("problem:"));
             }
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroDTO> handleGenericException(Exception ex) {
-        // Logar o erro no console para ajudar no debug
+
         ex.printStackTrace();
 
         ErroDTO erro = new ErroDTO("ERRO_INTERNO", "Ocorreu um erro inesperado no servidor.");

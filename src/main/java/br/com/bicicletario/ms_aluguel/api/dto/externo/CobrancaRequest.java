@@ -9,7 +9,7 @@ public record CobrancaRequest(
         @JsonProperty("ciclista")
         Long ciclistaId,
 
-        // Opcional: só envie se quiser forçar um erro/sucesso específico nos testes
+
         @JsonProperty("numeroCartaoTeste")
         String numeroCartaoTeste
 ) {}

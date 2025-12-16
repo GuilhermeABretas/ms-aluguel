@@ -29,9 +29,7 @@ public class CartaoDeCredito {
     @Column(nullable = false)
     private String cvv;
 
-    /**
-     * Define a relação: Um Cartão pertence a Um Ciclista.
-     */
+
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "ciclista_id", referencedColumnName = "id")
     @ToString.Exclude

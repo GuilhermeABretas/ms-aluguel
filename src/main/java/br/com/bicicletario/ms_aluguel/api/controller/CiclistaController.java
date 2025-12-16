@@ -47,8 +47,7 @@ public class CiclistaController {
         return ResponseEntity.ok(ciclistaService.permiteAluguel(idCiclista));
     }
 
-    // --- CORREÇÃO AQUI ---
-    // O tipo de retorno deve ser BicicletaDTO, pois é isso que o Service retorna agora
+
     @GetMapping("/{idCiclista}/bicicletaAlugada")
     public ResponseEntity<BicicletaDTO> obterBicicletaAlugada(@PathVariable Long idCiclista) {
         BicicletaDTO bicicleta = ciclistaService.obterBicicletaAlugada(idCiclista);

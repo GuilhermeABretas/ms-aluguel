@@ -12,7 +12,7 @@ public record ValidacaoCartaoRequest(
         String numero,
 
         @JsonProperty("validade")
-        @JsonFormat(pattern = "yyyy-MM-dd") // O formato exato que o ms-externo exige
+        @JsonFormat(pattern = "yyyy-MM-dd")
         LocalDate validade,
 
         @JsonProperty("cvv")

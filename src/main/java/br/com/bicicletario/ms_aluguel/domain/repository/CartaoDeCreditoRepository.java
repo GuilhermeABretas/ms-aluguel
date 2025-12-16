@@ -9,10 +9,7 @@ import java.util.Optional;
 @Repository
 public interface CartaoDeCreditoRepository extends JpaRepository<CartaoDeCredito, Long> {
 
-    /**
-     * Busca um cartão pelo ID do ciclista.
-     * (Usado no UC07 - GET /cartaoDeCredito/{idCiclista})
-     */
+
     Optional<CartaoDeCredito> findByCiclistaId(Long idCiclista);
 
 }

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public record CobrancaResponse(
         Long id,
-        String status, // "PENDENTE", "PAGA", "FALHA"
+        String status,
         LocalDateTime horaSolicitacao,
         LocalDateTime horaFinalizacao,
         Double valor,

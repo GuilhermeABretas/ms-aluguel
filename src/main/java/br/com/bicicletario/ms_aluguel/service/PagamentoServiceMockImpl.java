@@ -18,7 +18,6 @@ public class PagamentoServiceMockImpl implements PagamentoService {
         System.out.println("[MOCK PAGAMENTO] Cobrando R$ " + valor + " no cartão final "
                 + cartao.getNumero().substring(cartao.getNumero().length() - 4));
 
-        // Se quiser simular falha, descomente:
-        // throw new ValidacaoException("Pagamento recusado pela operadora.");
+
     }
 }

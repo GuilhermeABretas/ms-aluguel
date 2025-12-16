@@ -28,7 +28,7 @@ public class FuncionarioController {
     @PostMapping
     public ResponseEntity<FuncionarioDTO> cadastrarFuncionario(@Valid @RequestBody NovoFuncionarioDTO dto) {
         FuncionarioDTO novoFuncionario = funcionarioService.cadastrarFuncionario(dto);
-        // Retorna 200 conforme pedido no Swagger (embora 201 seja o padrão REST para criação)
+
         return ResponseEntity.ok(novoFuncionario);
     }
 
