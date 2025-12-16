@@ -1,18 +1,20 @@
 package br.com.bicicletario.ms_aluguel.api.dto;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class NovoAluguelDTO {
 
     @NotNull(message = "ID do ciclista é obrigatório")
     private Long ciclista;
 
-    @NotNull(message = "ID da tranca é obrigatório")
+    @NotNull(message = "ID da tranca de início é obrigatório")
     private Long trancaInicio;
-
-
-    public Long getCiclista() { return ciclista; }
-    public void setCiclista(Long ciclista) { this.ciclista = ciclista; }
-    public Long getTrancaInicio() { return trancaInicio; }
-    public void setTrancaInicio(Long trancaInicio) { this.trancaInicio = trancaInicio; }
 }

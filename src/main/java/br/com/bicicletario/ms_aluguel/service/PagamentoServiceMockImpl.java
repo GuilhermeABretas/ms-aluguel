@@ -2,24 +2,23 @@ package br.com.bicicletario.ms_aluguel.service;
 
 import br.com.bicicletario.ms_aluguel.api.dto.NovoCartaoDeCreditoDTO;
 import br.com.bicicletario.ms_aluguel.api.exception.ValidacaoException;
+import br.com.bicicletario.ms_aluguel.domain.model.CartaoDeCredito;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PagamentoServiceMockImpl implements PagamentoService {
 
+    @Override
+    public void validarCartao(NovoCartaoDeCreditoDTO cartao) {
+        System.out.println("[MOCK PAGAMENTO] Validando cartão: " + cartao.getNumero());
+    }
 
     @Override
-    public boolean validarCartao(NovoCartaoDeCreditoDTO cartaoDTO) {
-        System.out.println("--- MOCK DE PAGAMENTO ---");
-        System.out.println("Validando cartão com final: " + cartaoDTO.getNumero().substring(cartaoDTO.getNumero().length() - 4));
+    public void realizarCobranca(CartaoDeCredito cartao, Double valor) {
+        System.out.println("[MOCK PAGAMENTO] Cobrando R$ " + valor + " no cartão final "
+                + cartao.getNumero().substring(cartao.getNumero().length() - 4));
 
-        if (cartaoDTO.getNumero().endsWith("9999")) {
-            System.out.println("Resultado: Cartão REPROVADO (Mock)");
-
-            throw new ValidacaoException("Cartão de crédito reprovado pela administradora.");
-        }
-
-        System.out.println("Resultado: Cartão APROVADO (Mock)");
-        return true;
+        // Se quiser simular falha, descomente:
+        // throw new ValidacaoException("Pagamento recusado pela operadora.");
     }
 }

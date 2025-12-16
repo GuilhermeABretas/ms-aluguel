@@ -7,19 +7,13 @@ import java.util.List;
 
 public interface FuncionarioService {
 
-
     List<FuncionarioDTO> listarTodos();
-
 
     FuncionarioDTO buscarPorId(Long idFuncionario);
 
+    FuncionarioDTO cadastrarFuncionario(NovoFuncionarioDTO dto);
 
-    FuncionarioDTO salvar(NovoFuncionarioDTO dto);
+    FuncionarioDTO atualizarFuncionario(Long idFuncionario, NovoFuncionarioDTO dto);
 
-
-    FuncionarioDTO atualizar(Long idFuncionario, NovoFuncionarioDTO dto);
-
-
-    void deletar(Long idFuncionario);
-
+    void removerFuncionario(Long idFuncionario);
 }

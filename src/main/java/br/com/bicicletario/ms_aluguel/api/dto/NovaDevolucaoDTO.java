@@ -1,7 +1,15 @@
 package br.com.bicicletario.ms_aluguel.api.dto;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class NovaDevolucaoDTO {
 
     @NotNull(message = "ID da tranca é obrigatório")
@@ -9,10 +17,4 @@ public class NovaDevolucaoDTO {
 
     @NotNull(message = "ID da bicicleta é obrigatório")
     private Long idBicicleta;
-
-
-    public Long getIdTranca() { return idTranca; }
-    public void setIdTranca(Long idTranca) { this.idTranca = idTranca; }
-    public Long getIdBicicleta() { return idBicicleta; }
-    public void setIdBicicleta(Long idBicicleta) { this.idBicicleta = idBicicleta; }
 }

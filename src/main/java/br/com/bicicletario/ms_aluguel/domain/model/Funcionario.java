@@ -15,8 +15,8 @@ import org.hibernate.validator.constraints.br.CPF;
 @Table(name = "funcionarios")
 @Getter
 @Setter
-@NoArgsConstructor // Lombok gera o construtor vazio aqui
-@AllArgsConstructor // Lombok gera o construtor com todos os campos aqui
+@NoArgsConstructor
+@AllArgsConstructor
 public class Funcionario {
 
     @Id
@@ -51,5 +51,7 @@ public class Funcionario {
     @Column(nullable = false)
     private Funcao funcao;
 
-
+    @NotBlank(message = "Documento (RG/Matrícula) não pode estar em branco")
+    @Column(nullable = false)
+    private String documento;
 }

@@ -1,6 +1,7 @@
 package br.com.bicicletario.ms_aluguel.api.controller;
 
 import br.com.bicicletario.ms_aluguel.api.dto.AluguelDTO;
+import br.com.bicicletario.ms_aluguel.api.dto.DevolucaoDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovaDevolucaoDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoAluguelDTO;
 import br.com.bicicletario.ms_aluguel.service.AluguelService;
@@ -25,7 +26,7 @@ public class AluguelController {
     }
 
     @PostMapping("/devolucao")
-    public ResponseEntity<AluguelDTO> realizarDevolucao(@Valid @RequestBody NovaDevolucaoDTO dto) {
+    public ResponseEntity<DevolucaoDTO> realizarDevolucao(@Valid @RequestBody NovaDevolucaoDTO dto) {
         return ResponseEntity.ok(aluguelService.realizarDevolucao(dto));
     }
 }

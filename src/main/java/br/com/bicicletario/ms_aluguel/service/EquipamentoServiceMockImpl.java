@@ -7,12 +7,16 @@ public class EquipamentoServiceMockImpl implements EquipamentoService {
 
     @Override
     public Long recuperarBicicletaPorTranca(Long idTranca) {
-        // Simulação: Retorna um ID de bicicleta fixo ou baseado na tranca
-        return idTranca + 1000;
+        // Simulação: Se o ID da tranca for positivo, dizemos que tem a bicicleta de ID 100.
+        // Se quiser testar o erro, envie um ID de tranca negativo ou zero.
+        if (idTranca != null && idTranca > 0) {
+            return 100L; // ID simulado da bicicleta
+        }
+        return null; // Nenhuma bicicleta encontrada
     }
 
     @Override
     public void destrancarTranca(Long idTranca) {
-        System.out.println("--- MOCK EQUIPAMENTO: Tranca " + idTranca + " destrancada. ---");
+        System.out.println("[MOCK] Solicitando destrancamento da tranca: " + idTranca);
     }
 }

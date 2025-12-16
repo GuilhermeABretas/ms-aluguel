@@ -1,7 +1,10 @@
 package br.com.bicicletario.ms_aluguel.domain.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -22,18 +25,17 @@ public class Aluguel {
     private Ciclista ciclista;
 
     @Column(nullable = false)
-    private Long idBicicleta;
+    private Long bicicletaId;
 
     @Column(nullable = false)
-    private Long idTrancaInicio;
+    private Long trancaInicioId;
 
-    private Long idTrancaFim;
+    private Long trancaFimId;
 
     @Column(nullable = false)
-    private LocalDateTime dataHoraRetirada;
+    private LocalDateTime dataHoraInicio;
 
     private LocalDateTime dataHoraDevolucao;
 
     private Double valorCobrado;
-
 }

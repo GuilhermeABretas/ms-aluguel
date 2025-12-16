@@ -2,9 +2,8 @@ package br.com.bicicletario.ms_aluguel.api.controller;
 
 import br.com.bicicletario.ms_aluguel.api.dto.FuncionarioDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoFuncionarioDTO;
-import br.com.bicicletario.ms_aluguel.service.FuncionarioService; // Importe o service
+import br.com.bicicletario.ms_aluguel.service.FuncionarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,65 +14,39 @@ import java.util.List;
 @RequestMapping("/funcionario")
 public class FuncionarioController {
 
-    // Agora sim, injetamos o Service
+    private final FuncionarioService funcionarioService;
 
     public FuncionarioController(FuncionarioService funcionarioService) {
         this.funcionarioService = funcionarioService;
     }
 
-    private FuncionarioService funcionarioService;
-
-    /**
-     * UC15 - Incluir Funcionário
-     */
-    @PostMapping
-    public ResponseEntity<FuncionarioDTO> incluirFuncionario(
-            @Valid @RequestBody NovoFuncionarioDTO dto) {
-
-        FuncionarioDTO novoFuncionario = funcionarioService.salvar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoFuncionario);
-    }
-
-    /**
-     * UC15 - Listar Funcionários
-     */
     @GetMapping
     public ResponseEntity<List<FuncionarioDTO>> listarFuncionarios() {
-        List<FuncionarioDTO> funcionarios = funcionarioService.listarTodos();
-        return ResponseEntity.ok(funcionarios);
+        return ResponseEntity.ok(funcionarioService.listarTodos());
     }
 
-    /**
-     * UC15 - Obter Funcionário (Implícito no Editar/Remover)
-     */
+    @PostMapping
+    public ResponseEntity<FuncionarioDTO> cadastrarFuncionario(@Valid @RequestBody NovoFuncionarioDTO dto) {
+        FuncionarioDTO novoFuncionario = funcionarioService.cadastrarFuncionario(dto);
+        // Retorna 200 conforme pedido no Swagger (embora 201 seja o padrão REST para criação)
+        return ResponseEntity.ok(novoFuncionario);
+    }
+
     @GetMapping("/{idFuncionario}")
-    public ResponseEntity<FuncionarioDTO> obterFuncionario(
-            @PathVariable Long idFuncionario) {
-
-        FuncionarioDTO funcionario = funcionarioService.buscarPorId(idFuncionario);
-        return ResponseEntity.ok(funcionario);
+    public ResponseEntity<FuncionarioDTO> buscarPorId(@PathVariable Long idFuncionario) {
+        return ResponseEntity.ok(funcionarioService.buscarPorId(idFuncionario));
     }
 
-    /**
-     * UC1AF - Editar Funcionário
-     */
     @PutMapping("/{idFuncionario}")
-    public ResponseEntity<FuncionarioDTO> editarFuncionario(
+    public ResponseEntity<FuncionarioDTO> atualizarFuncionario(
             @PathVariable Long idFuncionario,
             @Valid @RequestBody NovoFuncionarioDTO dto) {
-
-        FuncionarioDTO funcionarioAtualizado = funcionarioService.atualizar(idFuncionario, dto);
-        return ResponseEntity.ok(funcionarioAtualizado);
+        return ResponseEntity.ok(funcionarioService.atualizarFuncionario(idFuncionario, dto));
     }
 
-    /**
-     * UC15 - Remover Funcionário
-     */
     @DeleteMapping("/{idFuncionario}")
-    public ResponseEntity<Void> removerFuncionario(
-            @PathVariable Long idFuncionario) {
-
-        funcionarioService.deletar(idFuncionario);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> removerFuncionario(@PathVariable Long idFuncionario) {
+        funcionarioService.removerFuncionario(idFuncionario);
+        return ResponseEntity.ok().build();
     }
 }

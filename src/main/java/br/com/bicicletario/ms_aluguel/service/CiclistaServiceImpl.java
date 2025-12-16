@@ -1,5 +1,6 @@
 package br.com.bicicletario.ms_aluguel.service;
 
+import br.com.bicicletario.ms_aluguel.api.dto.BicicletaDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.CartaoDeCreditoDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.CiclistaDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoCartaoDeCreditoDTO;
@@ -7,7 +8,7 @@ import br.com.bicicletario.ms_aluguel.api.dto.NovoCiclistaDTO;
 import br.com.bicicletario.ms_aluguel.api.exception.RecursoNaoEncontradoException;
 import br.com.bicicletario.ms_aluguel.api.exception.ValidacaoException;
 import br.com.bicicletario.ms_aluguel.domain.model.*;
-import br.com.bicicletario.ms_aluguel.domain.repository.AluguelRepository; // IMPORT NOVO
+import br.com.bicicletario.ms_aluguel.domain.repository.AluguelRepository;
 import br.com.bicicletario.ms_aluguel.domain.repository.CartaoDeCreditoRepository;
 import br.com.bicicletario.ms_aluguel.domain.repository.CiclistaRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,11 @@ import java.util.Optional;
 @Service
 public class CiclistaServiceImpl implements CiclistaService {
 
-
     private final CiclistaRepository ciclistaRepository;
     private final CartaoDeCreditoRepository cartaoRepository;
-    private final AluguelRepository aluguelRepository; // Adicionado
+    private final AluguelRepository aluguelRepository;
     private final PagamentoService pagamentoService;
     private final EmailService emailService;
-
 
     public CiclistaServiceImpl(
             CiclistaRepository ciclistaRepository,
@@ -44,11 +43,11 @@ public class CiclistaServiceImpl implements CiclistaService {
     @Override
     @Transactional
     public CiclistaDTO cadastrarCiclista(NovoCiclistaDTO dto) {
-        validarCadastro(dto);
+        validarCadastro(dto.getCiclista());
         pagamentoService.validarCartao(dto.getMeioDePagamento());
 
         Ciclista ciclista = new Ciclista();
-        mapearNovoCiclistaParaEntidade(dto, ciclista);
+        mapearNovoCiclistaParaEntidade(dto.getCiclista(), ciclista);
 
         CartaoDeCredito cartao = new CartaoDeCredito();
         mapearNovoCartaoParaEntidade(dto.getMeioDePagamento(), cartao);
@@ -89,7 +88,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         return new CiclistaDTO(ciclistaAtivado);
     }
 
-    // --- UC06: Buscar e Atualizar (NOVOS) ---
+    // --- UC06: Buscar e Atualizar ---
 
     @Override
     @Transactional(readOnly = true)
@@ -102,27 +101,26 @@ public class CiclistaServiceImpl implements CiclistaService {
     @Transactional
     public CiclistaDTO atualizarCiclista(Long idCiclista, NovoCiclistaDTO dto) {
         Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
+        NovoCiclistaDTO.DadosCiclista dados = dto.getCiclista();
 
         // Regra: Não pode usar email já existente
-        Optional<Ciclista> emailExistente = ciclistaRepository.findByEmail(dto.getEmail());
+        Optional<Ciclista> emailExistente = ciclistaRepository.findByEmail(dados.getEmail());
         if (emailExistente.isPresent() && !emailExistente.get().getId().equals(idCiclista)) {
             throw new ValidacaoException("Email já cadastrado por outro ciclista.");
         }
 
         // Atualiza os dados permitidos
-        ciclista.setNome(dto.getNome());
-        ciclista.setNacionalidade(dto.getNacionalidade());
-        ciclista.setNascimento(dto.getNascimento());
-        ciclista.setUrlFotoDocumento(dto.getUrlFotoDocumento());
-        // CPF geralmente não muda, mas se quiser permitir: ciclista.setCpf(dto.getCpf());
-
-        // Nota: Senha e Cartão tem fluxos separados, não atualizamos aqui.
+        ciclista.setNome(dados.getNome());
+        ciclista.setNacionalidade(dados.getNacionalidade());
+        ciclista.setNascimento(dados.getNascimento());
+        ciclista.setUrlFotoDocumento(dados.getUrlFotoDocumento());
+        // CPF geralmente não muda. Senha e Cartão tem fluxos separados.
 
         Ciclista atualizado = ciclistaRepository.save(ciclista);
         return new CiclistaDTO(atualizado);
     }
 
-    // --- Helpers (NOVOS) ---
+    // --- Helpers e Integrações ---
 
     @Override
     @Transactional(readOnly = true)
@@ -140,7 +138,7 @@ public class CiclistaServiceImpl implements CiclistaService {
     }
 
     @Override
-    public CiclistaDTO obterBicicletaAlugada(Long idCiclista) {
+    public BicicletaDTO obterBicicletaAlugada(Long idCiclista) {
         // Placeholder: No futuro, buscaremos o aluguel ativo e retornaremos dados da bicicleta.
         // Por enquanto, retorna null conforme combinado (fase pré-integração).
         return null;
@@ -191,7 +189,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         entidade.setCvv(dto.getCvv());
     }
 
-    private void mapearNovoCiclistaParaEntidade(NovoCiclistaDTO dto, Ciclista entidade) {
+    private void mapearNovoCiclistaParaEntidade(NovoCiclistaDTO.DadosCiclista dto, Ciclista entidade) {
         entidade.setNome(dto.getNome());
         entidade.setNascimento(dto.getNascimento());
         entidade.setCpf(dto.getCpf());
@@ -210,7 +208,7 @@ public class CiclistaServiceImpl implements CiclistaService {
         }
     }
 
-    private void validarCadastro(NovoCiclistaDTO dto) {
+    private void validarCadastro(NovoCiclistaDTO.DadosCiclista dto) {
         if (ciclistaRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new ValidacaoException("Email já cadastrado.");
         }

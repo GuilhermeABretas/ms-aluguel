@@ -13,28 +13,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AluguelDTO {
-
     private Long id;
-    private Long ciclista;
-    private Long bicicleta;
-    private LocalDateTime dataHoraRetirada;
-    private LocalDateTime dataHoraDevolucao;
+    private Long ciclistaId;
+    private Long bicicletaId;
+    private LocalDateTime dataHoraInicio;
+    private Long trancaInicioId;
     private Double valorCobrado;
 
-
     public AluguelDTO(Aluguel entidade) {
-        if (entidade != null) {
-            this.id = entidade.getId();
+        this.id = entidade.getId();
 
-            // Proteção contra NullPointerException caso o ciclista não venha preenchido
-            if (entidade.getCiclista() != null) {
-                this.ciclista = entidade.getCiclista().getId();
-            }
-
-            this.bicicleta = entidade.getIdBicicleta();
-            this.dataHoraRetirada = entidade.getDataHoraRetirada();
-            this.dataHoraDevolucao = entidade.getDataHoraDevolucao();
-            this.valorCobrado = entidade.getValorCobrado();
-        }
+        this.ciclistaId = entidade.getCiclista() != null ? entidade.getCiclista().getId() : null;
+        this.bicicletaId = entidade.getBicicletaId();
+        this.dataHoraInicio = entidade.getDataHoraInicio();
+        this.trancaInicioId = entidade.getTrancaInicioId();
+        this.valorCobrado = entidade.getValorCobrado();
     }
 }

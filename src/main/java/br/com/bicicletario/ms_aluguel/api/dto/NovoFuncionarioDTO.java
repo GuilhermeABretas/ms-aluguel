@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,27 +17,26 @@ import org.hibernate.validator.constraints.br.CPF;
 @AllArgsConstructor
 public class NovoFuncionarioDTO {
 
-    @NotBlank(message = "Nome não pode estar em branco")
-    private String nome;
-
-    @NotBlank(message = "Email não pode estar em branco")
-    @Email(message = "Email deve ser válido")
+    @NotBlank(message = "Email é obrigatório")
+    @Email(message = "Email inválido")
     private String email;
 
-    @NotBlank(message = "Senha não pode estar em branco")
-    @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
+    @NotBlank(message = "Nome é obrigatório")
+    private String nome;
+
+    @NotBlank(message = "Senha é obrigatória")
     private String senha;
 
-    @NotNull(message = "Idade não pode ser nula")
-    @Min(value = 18, message = "Funcionário deve ser maior de 18 anos")
-    private Integer idade;
-
-    @NotBlank(message = "CPF não pode estar em branco")
+    @NotBlank(message = "CPF é obrigatório")
     @CPF(message = "CPF inválido")
     private String cpf;
 
-    @NotNull(message = "Função não pode ser nula")
+    @NotNull(message = "Função é obrigatória (ADMINISTRATIVO ou REPARADOR)")
     private Funcao funcao;
 
+    @Min(value = 18, message = "Idade deve ser no mínimo 18 anos")
+    private int idade;
 
+    @NotBlank(message = "Documento (RG ou Matrícula) é obrigatório")
+    private String documento;
 }

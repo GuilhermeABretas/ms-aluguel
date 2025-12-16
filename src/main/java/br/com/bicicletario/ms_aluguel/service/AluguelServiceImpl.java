@@ -1,9 +1,6 @@
 package br.com.bicicletario.ms_aluguel.service;
 
-import br.com.bicicletario.ms_aluguel.api.dto.AluguelDTO;
-import br.com.bicicletario.ms_aluguel.api.dto.NovaDevolucaoDTO;
-import br.com.bicicletario.ms_aluguel.api.dto.NovoAluguelDTO;
-import br.com.bicicletario.ms_aluguel.api.dto.NovoCartaoDeCreditoDTO;
+import br.com.bicicletario.ms_aluguel.api.dto.*;
 import br.com.bicicletario.ms_aluguel.api.exception.RecursoNaoEncontradoException;
 import br.com.bicicletario.ms_aluguel.api.exception.ValidacaoException;
 import br.com.bicicletario.ms_aluguel.domain.model.Aluguel;
@@ -21,109 +18,126 @@ import java.time.LocalDateTime;
 @Service
 public class AluguelServiceImpl implements AluguelService {
 
+    private static final Double CUSTO_FIXO_INICIAL = 10.00;
+    private static final Double CUSTO_HORA_EXTRA = 5.00;
+
     private final AluguelRepository aluguelRepository;
     private final CiclistaRepository ciclistaRepository;
     private final CartaoDeCreditoRepository cartaoRepository;
-    private final CiclistaService ciclistaService; // Reusar validações
-    private final EquipamentoService equipamentoService; // Mock externo
-    private final PagamentoService pagamentoService; // Mock externo
-    private final EmailService emailService; // Mock externo
+    private final EquipamentoService equipamentoService;
+    private final PagamentoService pagamentoService;
+    private final EmailService emailService;
+    private final CiclistaService ciclistaService;
 
-    public AluguelServiceImpl(AluguelRepository aluguelRepository,
-                              CiclistaRepository ciclistaRepository,
-                              CartaoDeCreditoRepository cartaoRepository,
-                              CiclistaService ciclistaService,
-                              EquipamentoService equipamentoService,
-                              PagamentoService pagamentoService,
-                              EmailService emailService) {
+    public AluguelServiceImpl(
+            AluguelRepository aluguelRepository,
+            CiclistaRepository ciclistaRepository,
+            CartaoDeCreditoRepository cartaoRepository,
+            EquipamentoService equipamentoService,
+            PagamentoService pagamentoService,
+            EmailService emailService,
+            CiclistaService ciclistaService) {
         this.aluguelRepository = aluguelRepository;
         this.ciclistaRepository = ciclistaRepository;
         this.cartaoRepository = cartaoRepository;
-        this.ciclistaService = ciclistaService;
         this.equipamentoService = equipamentoService;
         this.pagamentoService = pagamentoService;
         this.emailService = emailService;
+        this.ciclistaService = ciclistaService;
     }
 
     @Override
     @Transactional
     public AluguelDTO realizarAluguel(NovoAluguelDTO dto) {
-
+        // 1. Validar se ciclista pode alugar
         if (!ciclistaService.permiteAluguel(dto.getCiclista())) {
-            throw new ValidacaoException("Ciclista não apto para alugar (Inativo ou com aluguel pendente).");
+            throw new ValidacaoException("Ciclista não apto para alugar (pendente, inativo ou já possui aluguel).");
         }
 
-
+        // 2. Buscar Entidade Ciclista (Necessário para salvar no Aluguel)
         Ciclista ciclista = ciclistaRepository.findById(dto.getCiclista())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Ciclista não encontrado"));
 
-        CartaoDeCredito cartao = cartaoRepository.findByCiclistaId(dto.getCiclista())
-                .orElseThrow(() -> new ValidacaoException("Ciclista não possui cartão de crédito cadastrado para cobrança."));
-
-
+        // 3. Verificar bicicleta na tranca
         Long idBicicleta = equipamentoService.recuperarBicicletaPorTranca(dto.getTrancaInicio());
+        if (idBicicleta == null) {
+            throw new ValidacaoException("Não há bicicleta na tranca informada.");
+        }
 
-        // 4. Realiza Cobrança  - Mock
+        // 4. Cobrança
+        CartaoDeCredito cartao = cartaoRepository.findByCiclistaId(dto.getCiclista())
+                .orElseThrow(() -> new ValidacaoException("Ciclista não possui cartão para cobrança."));
 
-        NovoCartaoDeCreditoDTO cartaoDTO = new NovoCartaoDeCreditoDTO();
-        cartaoDTO.setNomeTitular(cartao.getNomeTitular());
-        cartaoDTO.setNumero(cartao.getNumero());
-        cartaoDTO.setValidade(cartao.getValidade());
-        cartaoDTO.setCvv(cartao.getCvv());
+        pagamentoService.realizarCobranca(cartao, CUSTO_FIXO_INICIAL);
 
-        pagamentoService.validarCartao(cartaoDTO); // Se falhar, lança exceção
+        // 5. Destrancar
+        equipamentoService.destrancarTranca(dto.getTrancaInicio());
 
-
+        // 6. Criar Aluguel
         Aluguel aluguel = new Aluguel();
-        aluguel.setCiclista(ciclista);
-        aluguel.setIdTrancaInicio(dto.getTrancaInicio());
-        aluguel.setIdBicicleta(idBicicleta);
-        aluguel.setDataHoraRetirada(LocalDateTime.now());
-
+        aluguel.setCiclista(ciclista); // Define o objeto Ciclista
+        aluguel.setTrancaInicioId(dto.getTrancaInicio());
+        aluguel.setBicicletaId(idBicicleta);
+        aluguel.setDataHoraInicio(LocalDateTime.now()); // Usa o nome correto do campo
+        aluguel.setValorCobrado(CUSTO_FIXO_INICIAL);
 
         aluguelRepository.save(aluguel);
 
-
-        equipamentoService.destrancarTranca(dto.getTrancaInicio());
-
-
-        emailService.enviarEmail(ciclista.getEmail(), "Aluguel Realizado", "Você alugou a bicicleta " + idBicicleta);
+        // 7. Notificar
+        emailService.enviarEmail(ciclista.getEmail(), "Aluguel Realizado",
+                "Sua bicicleta foi liberada! Bom passeio.");
 
         return new AluguelDTO(aluguel);
     }
 
     @Override
     @Transactional
-    public AluguelDTO realizarDevolucao(NovaDevolucaoDTO dto) {
+    public DevolucaoDTO realizarDevolucao(NovaDevolucaoDTO dto) {
+        // 1. Buscar aluguel ativo pela bicicleta
+        Aluguel aluguel = aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(dto.getIdBicicleta())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Nenhum aluguel ativo encontrado para esta bicicleta."));
 
-
-        Aluguel aluguel = aluguelRepository.findByBicicletaAndDevolucaoNull(dto.getIdBicicleta())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Nenhum aluguel em aberto encontrado para a bicicleta " + dto.getIdBicicleta()));
-
-
+        // 2. Registrar devolução
         LocalDateTime agora = LocalDateTime.now();
-        long minutos = Duration.between(aluguel.getDataHoraRetirada(), agora).toMinutes();
-
-        Double valorExtra = 0.0;
-        if (minutos > 120) {
-            valorExtra = (minutos - 120) * 0.50;
-
-            NovoCartaoDeCreditoDTO cartaoDTO = new NovoCartaoDeCreditoDTO();
-            CartaoDeCredito cartao = aluguel.getCiclista().getCartaoDeCredito();
-            cartaoDTO.setNumero(cartao.getNumero());
-            pagamentoService.validarCartao(cartaoDTO);
-        }
-
-
         aluguel.setDataHoraDevolucao(agora);
-        aluguel.setIdTrancaFim(dto.getIdTranca());
-        aluguel.setValorCobrado(10.0 + valorExtra);
+        aluguel.setTrancaFimId(dto.getIdTranca());
+
+        // 3. Calcular custos
+        Double valorExtra = calcularCustoExtra(aluguel.getDataHoraInicio(), agora);
+
+        if (valorExtra > 0) {
+            CartaoDeCredito cartao = cartaoRepository.findByCiclistaId(aluguel.getCiclista().getId())
+                    .orElseThrow(() -> new ValidacaoException("Erro ao processar pagamento extra: Cartão não encontrado."));
+
+            pagamentoService.realizarCobranca(cartao, valorExtra);
+            aluguel.setValorCobrado(aluguel.getValorCobrado() + valorExtra);
+        }
 
         aluguelRepository.save(aluguel);
 
+        // 4. Notificar
+        String corpoEmail = "Devolução confirmada em " + agora + ". ";
+        if (valorExtra > 0) {
+            corpoEmail += "Cobrança extra de R$ " + valorExtra + " realizada.";
+        }
+        emailService.enviarEmail(aluguel.getCiclista().getEmail(), "Devolução Realizada", corpoEmail);
 
-        emailService.enviarEmail(aluguel.getCiclista().getEmail(), "Devolução Realizada", "Valor total: " + aluguel.getValorCobrado());
+        return new DevolucaoDTO(aluguel, valorExtra, aluguel.getValorCobrado());
+    }
 
-        return new AluguelDTO(aluguel);
+    private Double calcularCustoExtra(LocalDateTime inicio, LocalDateTime fim) {
+        if (inicio == null || fim == null) return 0.0;
+
+        Duration duracao = Duration.between(inicio, fim);
+        long horasTotais = duracao.toHours();
+
+        if (horasTotais > 2) {
+            long horasExtras = horasTotais - 2;
+            if (duracao.toMinutes() % 60 > 0) {
+                horasExtras++;
+            }
+            return horasExtras * CUSTO_HORA_EXTRA;
+        }
+        return 0.0;
     }
 }

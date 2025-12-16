@@ -5,14 +5,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceMockImpl implements EmailService {
 
-
     @Override
-    public void enviarEmail(String email, String assunto, String mensagem) {
-        System.out.println("--- MOCK DE EMAIL ---");
-        System.out.println("Enviando email para: " + email);
+    public void enviarEmail(String destinatario, String assunto, String mensagem) {
+        System.out.println("==================================================");
+        System.out.println("[MOCK EMAIL] Enviando email para: " + destinatario);
         System.out.println("Assunto: " + assunto);
-        System.out.println("Mensagem: " + mensagem);
-        System.out.println("--- EMAIL ENVIADO (MOCK) ---");
-
+        System.out.println("Corpo: " + mensagem);
+        System.out.println("==================================================");
     }
 }
