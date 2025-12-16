@@ -123,6 +123,10 @@ class AluguelServiceImplTest {
 
         when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
+
+        // CORREÇÃO: Mock para encontrar o cartão na hora da cobrança extra
+        when(cartaoRepository.findByCiclistaId(aluguelAtivo.getCiclista().getId())).thenReturn(Optional.of(cartao));
+
         doNothing().when(pagamentoService).realizarCobranca(any(), anyDouble());
 
         service.realizarDevolucao(novaDevolucaoDTO);
