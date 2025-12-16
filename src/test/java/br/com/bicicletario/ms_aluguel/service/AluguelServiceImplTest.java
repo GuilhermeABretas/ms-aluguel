@@ -63,7 +63,7 @@ class AluguelServiceImplTest {
         aluguelAtivo.setCiclista(ciclista);
         aluguelAtivo.setBicicletaId(100L);
         aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
-        aluguelAtivo.setValorCobrado(10.0); // Adicionado para garantir valor base e evitar NullPointerException
+        aluguelAtivo.setValorCobrado(10.0);
 
         novaDevolucaoDTO = new NovaDevolucaoDTO();
         novaDevolucaoDTO.setIdBicicleta(100L);
@@ -120,18 +120,20 @@ class AluguelServiceImplTest {
 
     @Test
     void testRealizarDevolucao_ComAtraso() {
+        // Uso total: 3 horas (180 minutos) -> 1 hora extra -> R$ 5.00 extra
         aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(180));
 
         when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
         when(cartaoRepository.findByCiclistaId(aluguelAtivo.getCiclista().getId())).thenReturn(Optional.of(cartao));
 
-        doNothing().when(pagamentoService).realizarCobranca(any(), anyDouble());
+        doNothing().when(pagamentoService).realizarCobranca(any(), eq(5.0)); // Cobrança extra esperada de R$ 5.00
 
         service.realizarDevolucao(novaDevolucaoDTO);
 
-        assertEquals(20.0, aluguelAtivo.getValorCobrado());
+        // Asserção do valor total esperado: R$ 10.00 (base) + R$ 5.00 (extra) = R$ 15.00
+        assertEquals(15.0, aluguelAtivo.getValorCobrado());
 
-        verify(pagamentoService).realizarCobranca(any(), eq(10.0));
+        verify(pagamentoService).realizarCobranca(any(), eq(5.0));
     }
 }
