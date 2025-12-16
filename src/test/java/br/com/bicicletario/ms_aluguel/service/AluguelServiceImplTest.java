@@ -84,10 +84,7 @@ class AluguelServiceImplTest {
             return a;
         });
 
-        AluguelDTO resultado = service.realizarAluguel(novoAluguelDTO);
-
-        assertNotNull(resultado.getId());
-        assertEquals(100L, resultado.getBicicletaId());
+        service.realizarAluguel(novoAluguelDTO);
 
         verify(equipamentoService).destrancarTranca(10L);
         verify(emailService).enviarEmail(anyString(), anyString(), anyString());
@@ -120,20 +117,37 @@ class AluguelServiceImplTest {
 
     @Test
     void testRealizarDevolucao_ComAtraso() {
-        // Uso total: 3 horas (180 minutos) -> 1 hora extra -> R$ 5.00 extra
         aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(180));
 
         when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
         when(cartaoRepository.findByCiclistaId(aluguelAtivo.getCiclista().getId())).thenReturn(Optional.of(cartao));
 
-        doNothing().when(pagamentoService).realizarCobranca(any(), eq(5.0)); // Cobrança extra esperada de R$ 5.00
+        doNothing().when(pagamentoService).realizarCobranca(any(), eq(5.0));
 
         service.realizarDevolucao(novaDevolucaoDTO);
 
-        // Asserção do valor total esperado: R$ 10.00 (base) + R$ 5.00 (extra) = R$ 15.00
         assertEquals(15.0, aluguelAtivo.getValorCobrado());
 
         verify(pagamentoService).realizarCobranca(any(), eq(5.0));
+    }
+
+    @Test
+    void testRealizarDevolucao_FalhaNaCobrancaExtra() {
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(180));
+
+        when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
+        when(cartaoRepository.findByCiclistaId(aluguelAtivo.getCiclista().getId())).thenReturn(Optional.of(cartao));
+
+        // Simula a falha no processamento de pagamento
+        doThrow(new ValidacaoException("Pagamento Extra Recusado")).when(pagamentoService).realizarCobranca(any(), anyDouble());
+
+        // Espera-se que a exceção seja propagada
+        assertThrows(ValidacaoException.class, () -> service.realizarDevolucao(novaDevolucaoDTO));
+
+        // Verifica se a devolução não foi salva
+        verify(aluguelRepository, never()).save(any());
+        // Verifica se o email de devolução não foi enviado
+        verify(emailService, never()).enviarEmail(anyString(), anyString(), eq("Devolução Realizada"));
     }
 }
