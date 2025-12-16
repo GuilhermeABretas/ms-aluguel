@@ -63,6 +63,7 @@ class AluguelServiceImplTest {
         aluguelAtivo.setCiclista(ciclista);
         aluguelAtivo.setBicicletaId(100L);
         aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
+        aluguelAtivo.setValorCobrado(10.0); // Adicionado para garantir valor base e evitar NullPointerException
 
         novaDevolucaoDTO = new NovaDevolucaoDTO();
         novaDevolucaoDTO.setIdBicicleta(100L);
@@ -123,8 +124,6 @@ class AluguelServiceImplTest {
 
         when(aluguelRepository.findByBicicletaIdAndDataHoraDevolucaoIsNull(100L)).thenReturn(Optional.of(aluguelAtivo));
         when(aluguelRepository.save(any(Aluguel.class))).thenAnswer(i -> i.getArgument(0));
-
-        // CORREÇÃO: Mock para encontrar o cartão na hora da cobrança extra
         when(cartaoRepository.findByCiclistaId(aluguelAtivo.getCiclista().getId())).thenReturn(Optional.of(cartao));
 
         doNothing().when(pagamentoService).realizarCobranca(any(), anyDouble());
