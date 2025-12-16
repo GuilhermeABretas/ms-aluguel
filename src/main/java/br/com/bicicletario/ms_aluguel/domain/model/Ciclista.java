@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Table(name = "ciclistas")
 @Getter
 @Setter
-@NoArgsConstructor // Obrigatório para o JPA
-@AllArgsConstructor // Útil para seus testes
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ciclista {
 
     @Id

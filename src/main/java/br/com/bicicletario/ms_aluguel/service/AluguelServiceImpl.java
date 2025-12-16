@@ -48,23 +48,23 @@ public class AluguelServiceImpl implements AluguelService {
     @Override
     @Transactional
     public AluguelDTO realizarAluguel(NovoAluguelDTO dto) {
-        // 1. Valida se ciclista pode alugar (Ativo e sem pendências)
+
         if (!ciclistaService.permiteAluguel(dto.getCiclista())) {
             throw new ValidacaoException("Ciclista não apto para alugar (Inativo ou com aluguel pendente).");
         }
 
-        // 2. Recupera dados
+
         Ciclista ciclista = ciclistaRepository.findById(dto.getCiclista())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Ciclista não encontrado"));
 
         CartaoDeCredito cartao = cartaoRepository.findByCiclistaId(dto.getCiclista())
                 .orElseThrow(() -> new ValidacaoException("Ciclista não possui cartão de crédito cadastrado para cobrança."));
 
-        // 3. Consulta MS Equipamento para saber qual bike está na tranca
+
         Long idBicicleta = equipamentoService.recuperarBicicletaPorTranca(dto.getTrancaInicio());
 
-        // 4. Realiza Cobrança (Ex: R$ 10,00 fixo) - Mock
-        // Precisamos transformar a entidade Cartao em DTO para o serviço de pagamento
+        // 4. Realiza Cobrança  - Mock
+
         NovoCartaoDeCreditoDTO cartaoDTO = new NovoCartaoDeCreditoDTO();
         cartaoDTO.setNomeTitular(cartao.getNomeTitular());
         cartaoDTO.setNumero(cartao.getNumero());
@@ -73,20 +73,20 @@ public class AluguelServiceImpl implements AluguelService {
 
         pagamentoService.validarCartao(cartaoDTO); // Se falhar, lança exceção
 
-        // 5. Cria registro de Aluguel
+
         Aluguel aluguel = new Aluguel();
         aluguel.setCiclista(ciclista);
         aluguel.setIdTrancaInicio(dto.getTrancaInicio());
         aluguel.setIdBicicleta(idBicicleta);
         aluguel.setDataHoraRetirada(LocalDateTime.now());
-        // Devolução e Valor ficam nulos por enquanto
+
 
         aluguelRepository.save(aluguel);
 
-        // 6. Libera a tranca (Mock)
+
         equipamentoService.destrancarTranca(dto.getTrancaInicio());
 
-        // 7. Envia email
+
         emailService.enviarEmail(ciclista.getEmail(), "Aluguel Realizado", "Você alugou a bicicleta " + idBicicleta);
 
         return new AluguelDTO(aluguel);
@@ -95,44 +95,33 @@ public class AluguelServiceImpl implements AluguelService {
     @Override
     @Transactional
     public AluguelDTO realizarDevolucao(NovaDevolucaoDTO dto) {
-        // 1. Busca qual aluguel está ativo para essa bicicleta
-        // (Lógica simplificada: buscamos o último aluguel aberto dessa bike.
-        // Num sistema real, o MS Equipamento mandaria o ID do aluguel ou do ciclista, mas o swagger manda só bike e tranca)
 
-        // Vamos buscar pelo ciclista? Não temos o ID do ciclista no DTO.
-        // Vamos assumir que temos que encontrar o aluguel pela bicicleta que está voltando.
-        // Precisaríamos de um metodo no repository: findByBicicletaIdAndDataHoraDevolucaoIsNull
-        // Como não criamos, vamos fazer uma busca "mockada" ou varrer (não ideal, mas serve pro protótipo).
-        // Melhor: Vamos adicionar o metodo no Repository agora (eu aviso abaixo).
 
         Aluguel aluguel = aluguelRepository.findByBicicletaAndDevolucaoNull(dto.getIdBicicleta())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Nenhum aluguel em aberto encontrado para a bicicleta " + dto.getIdBicicleta()));
 
-        // 2. Calcula valor extra (Regra de Negócio)
-        // Ex: Se passou de 2 horas, cobra extra.
+
         LocalDateTime agora = LocalDateTime.now();
         long minutos = Duration.between(aluguel.getDataHoraRetirada(), agora).toMinutes();
 
         Double valorExtra = 0.0;
         if (minutos > 120) {
-            valorExtra = (minutos - 120) * 0.50; // R$ 0,50 por minuto extra
-            // Cobra o extra
+            valorExtra = (minutos - 120) * 0.50;
+
             NovoCartaoDeCreditoDTO cartaoDTO = new NovoCartaoDeCreditoDTO();
             CartaoDeCredito cartao = aluguel.getCiclista().getCartaoDeCredito();
-            cartaoDTO.setNumero(cartao.getNumero()); // Simplificado
+            cartaoDTO.setNumero(cartao.getNumero());
             pagamentoService.validarCartao(cartaoDTO);
         }
 
-        // 3. Atualiza o Aluguel
+
         aluguel.setDataHoraDevolucao(agora);
         aluguel.setIdTrancaFim(dto.getIdTranca());
-        aluguel.setValorCobrado(10.0 + valorExtra); // 10 fixo + extra
+        aluguel.setValorCobrado(10.0 + valorExtra);
 
         aluguelRepository.save(aluguel);
 
-        // 4. Tranca a tranca (Mock - assumimos que o hardware fez isso)
 
-        // 5. Envia email
         emailService.enviarEmail(aluguel.getCiclista().getEmail(), "Devolução Realizada", "Valor total: " + aluguel.getValorCobrado());
 
         return new AluguelDTO(aluguel);

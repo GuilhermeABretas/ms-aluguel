@@ -22,18 +22,18 @@ public class Aluguel {
     private Ciclista ciclista;
 
     @Column(nullable = false)
-    private Long idBicicleta; // ID vindo do MS Equipamento
+    private Long idBicicleta;
 
     @Column(nullable = false)
-    private Long idTrancaInicio; // ID vindo do MS Equipamento
+    private Long idTrancaInicio;
 
-    private Long idTrancaFim; // Preenchido na devolução
+    private Long idTrancaFim;
 
     @Column(nullable = false)
     private LocalDateTime dataHoraRetirada;
 
-    private LocalDateTime dataHoraDevolucao; // Preenchido na devolução
+    private LocalDateTime dataHoraDevolucao;
 
-    private Double valorCobrado; // Preenchido na devolução
+    private Double valorCobrado;
 
 }

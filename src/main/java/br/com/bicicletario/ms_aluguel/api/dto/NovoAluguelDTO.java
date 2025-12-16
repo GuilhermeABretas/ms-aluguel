@@ -10,7 +10,7 @@ public class NovoAluguelDTO {
     @NotNull(message = "ID da tranca é obrigatório")
     private Long trancaInicio;
 
-    // Getters e Setters manuais
+
     public Long getCiclista() { return ciclista; }
     public void setCiclista(Long ciclista) { this.ciclista = ciclista; }
     public Long getTrancaInicio() { return trancaInicio; }

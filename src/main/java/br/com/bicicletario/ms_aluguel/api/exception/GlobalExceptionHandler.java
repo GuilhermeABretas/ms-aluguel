@@ -45,8 +45,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroDTO> handleGenericException(Exception ex) {
-        // Logar o erro em um sistema de log real é uma boa prática
-        ex.printStackTrace();
+
         ErroDTO erro = new ErroDTO("ERRO_INTERNO", "Ocorreu um erro inesperado no servidor.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
     }

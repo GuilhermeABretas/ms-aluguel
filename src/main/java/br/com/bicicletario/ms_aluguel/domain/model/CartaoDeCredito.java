@@ -34,7 +34,7 @@ public class CartaoDeCredito {
      */
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "ciclista_id", referencedColumnName = "id")
-    @ToString.Exclude // <--- CRUCIAL: Previne loop infinito (StackOverflowError)
+    @ToString.Exclude
     private Ciclista ciclista;
 
 }

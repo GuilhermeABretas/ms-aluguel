@@ -10,7 +10,7 @@ public class NovaDevolucaoDTO {
     @NotNull(message = "ID da bicicleta é obrigatório")
     private Long idBicicleta;
 
-    // Getters e Setters
+
     public Long getIdTranca() { return idTranca; }
     public void setIdTranca(Long idTranca) { this.idTranca = idTranca; }
     public Long getIdBicicleta() { return idBicicleta; }

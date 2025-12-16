@@ -19,14 +19,14 @@ import java.util.Optional;
 @Service
 public class CiclistaServiceImpl implements CiclistaService {
 
-    // Dependências (Sem @Autowired, usando final)
+
     private final CiclistaRepository ciclistaRepository;
     private final CartaoDeCreditoRepository cartaoRepository;
     private final AluguelRepository aluguelRepository; // Adicionado
     private final PagamentoService pagamentoService;
     private final EmailService emailService;
 
-    // Construtor para Injeção de Dependência
+
     public CiclistaServiceImpl(
             CiclistaRepository ciclistaRepository,
             CartaoDeCreditoRepository cartaoRepository,
@@ -103,7 +103,7 @@ public class CiclistaServiceImpl implements CiclistaService {
     public CiclistaDTO atualizarCiclista(Long idCiclista, NovoCiclistaDTO dto) {
         Ciclista ciclista = buscarCiclistaPeloId(idCiclista);
 
-        // Regra: Não pode usar email já existente (se for de outro ID)
+        // Regra: Não pode usar email já existente
         Optional<Ciclista> emailExistente = ciclistaRepository.findByEmail(dto.getEmail());
         if (emailExistente.isPresent() && !emailExistente.get().getId().equals(idCiclista)) {
             throw new ValidacaoException("Email já cadastrado por outro ciclista.");
