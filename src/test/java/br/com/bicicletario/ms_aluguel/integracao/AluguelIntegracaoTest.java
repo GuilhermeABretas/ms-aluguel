@@ -94,6 +94,7 @@ class AluguelIntegracaoTest {
         dadosCiclista.setEmail("int@teste.com");
         dadosCiclista.setSenha("senha123");
         dadosCiclista.setUrlFotoDocumento("http://foto.com/doc.jpg");
+        dadosCiclista.setPassaporte(null); // CORREÇÃO: Garante que o campo existe no JSON com valor null
 
         NovoCiclistaDTO novoCiclistaDTO = new NovoCiclistaDTO();
         novoCiclistaDTO.setCiclista(dadosCiclista);
@@ -146,7 +147,6 @@ class AluguelIntegracaoTest {
 
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
 
-        // Refatorando a criação do DTO de Devolução
         NovaDevolucaoDTO devolucaoDTO = new NovaDevolucaoDTO();
         devolucaoDTO.setIdTranca(ID_TRANCA_FIM);
         devolucaoDTO.setIdBicicleta(ID_BICICLETA);
@@ -172,7 +172,6 @@ class AluguelIntegracaoTest {
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
 
-        // Refatorando a criação do DTO de Devolução
         NovaDevolucaoDTO devolucaoDTO = new NovaDevolucaoDTO();
         devolucaoDTO.setIdTranca(ID_TRANCA_FIM);
         devolucaoDTO.setIdBicicleta(ID_BICICLETA);
