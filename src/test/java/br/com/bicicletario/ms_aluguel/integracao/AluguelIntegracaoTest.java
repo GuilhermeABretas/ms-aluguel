@@ -5,6 +5,7 @@ import br.com.bicicletario.ms_aluguel.api.dto.NovaDevolucaoDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoAluguelDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoCiclistaDTO;
 import br.com.bicicletario.ms_aluguel.api.dto.NovoCartaoDeCreditoDTO;
+import br.com.bicicletario.ms_aluguel.domain.model.Aluguel;
 import br.com.bicicletario.ms_aluguel.domain.model.Nacionalidade;
 import br.com.bicicletario.ms_aluguel.domain.repository.AluguelRepository;
 import br.com.bicicletario.ms_aluguel.domain.repository.CiclistaRepository;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,12 +91,12 @@ class AluguelIntegracaoTest {
         NovoCiclistaDTO.DadosCiclista dadosCiclista = new NovoCiclistaDTO.DadosCiclista();
         dadosCiclista.setNome("Integracao Ciclista");
         dadosCiclista.setNascimento(LocalDate.of(2000, 1, 1));
-        dadosCiclista.setCpf("12345678900");
+        dadosCiclista.setCpf("13560397740");
         dadosCiclista.setNacionalidade(Nacionalidade.BRASILEIRO);
         dadosCiclista.setEmail("int@teste.com");
         dadosCiclista.setSenha("senha123");
         dadosCiclista.setUrlFotoDocumento("http://foto.com/doc.jpg");
-        dadosCiclista.setPassaporte(null); // CORREÇÃO: Garante que o campo existe no JSON com valor null
+        dadosCiclista.setPassaporte(null);
 
         NovoCiclistaDTO novoCiclistaDTO = new NovoCiclistaDTO();
         novoCiclistaDTO.setCiclista(dadosCiclista);
@@ -140,10 +142,12 @@ class AluguelIntegracaoTest {
     void testRealizarDevolucao_SemAtraso_IntegracaoSucesso() throws Exception {
         testRealizarAluguel_IntegracaoSucesso();
 
-        aluguelRepository.findById(1L).ifPresent(aluguel -> {
-            aluguel.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
-            aluguelRepository.save(aluguel);
-        });
+        // CORREÇÃO: Busca o único aluguel existente (sem depender do ID)
+        List<Aluguel> alugueis = aluguelRepository.findAll();
+        Aluguel aluguelAtivo = alugueis.get(0);
+
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(30));
+        aluguelRepository.save(aluguelAtivo);
 
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
 
@@ -164,10 +168,13 @@ class AluguelIntegracaoTest {
     void testRealizarDevolucao_ComAtraso_IntegracaoSucesso() throws Exception {
         testRealizarAluguel_IntegracaoSucesso();
 
-        aluguelRepository.findById(1L).ifPresent(aluguel -> {
-            aluguel.setDataHoraInicio(LocalDateTime.now().minusMinutes(181));
-            aluguelRepository.save(aluguel);
-        });
+        // CORREÇÃO: Busca o único aluguel existente (sem depender do ID)
+        List<Aluguel> alugueis = aluguelRepository.findAll();
+        Aluguel aluguelAtivo = alugueis.get(0);
+
+        // Força a data de início para 3 horas e 1 minuto atrás (181 minutos)
+        aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(181));
+        aluguelRepository.save(aluguelAtivo);
 
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
         mockExterno.enqueue(new MockResponse().setResponseCode(200));
