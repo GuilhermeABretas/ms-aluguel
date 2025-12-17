@@ -25,8 +25,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -139,10 +139,23 @@ class AluguelIntegracaoTest {
     }
 
     @Test
+    void testRealizarAluguel_FalhaCobrancaTaxaBase() throws Exception {
+        mockEquipamento.enqueue(new MockResponse().setBody(BIKE_JSON).addHeader("Content-Type", "application/json"));
+        mockExterno.enqueue(new MockResponse().setResponseCode(400).setBody("{\"mensagem\": \"Cartão recusado\"}"));
+
+        NovoAluguelDTO novoAluguel = new NovoAluguelDTO(idCiclista, ID_TRANCA_INICIO);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/aluguel")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(novoAluguel)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.mensagem").exists());
+    }
+
+    @Test
     void testRealizarDevolucao_SemAtraso_IntegracaoSucesso() throws Exception {
         testRealizarAluguel_IntegracaoSucesso();
 
-        // CORREÇÃO: Busca o único aluguel existente (sem depender do ID)
         List<Aluguel> alugueis = aluguelRepository.findAll();
         Aluguel aluguelAtivo = alugueis.get(0);
 
@@ -168,11 +181,9 @@ class AluguelIntegracaoTest {
     void testRealizarDevolucao_ComAtraso_IntegracaoSucesso() throws Exception {
         testRealizarAluguel_IntegracaoSucesso();
 
-        // CORREÇÃO: Busca o único aluguel existente (sem depender do ID)
         List<Aluguel> alugueis = aluguelRepository.findAll();
         Aluguel aluguelAtivo = alugueis.get(0);
 
-        // Força a data de início para 3 horas e 1 minuto atrás (181 minutos)
         aluguelAtivo.setDataHoraInicio(LocalDateTime.now().minusMinutes(181));
         aluguelRepository.save(aluguelAtivo);
 
